@@ -287,8 +287,11 @@ export function firstBookableDay(now: Date, timeZone: string) {
 /* ---------------- Formatting ---------------- */
 
 export const fmt = {
-  /** A slot's time of day in the visitor's zone. */
-  time: (d: Date, timeZone: string) => d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', timeZone }),
+  /**
+   * A slot's time of day in the visitor's zone, always "2:30 PM": phones set
+   * to a 24-hour clock would otherwise show "14:30".
+   */
+  time: (d: Date, timeZone: string) => d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone }),
   /** A slot's date in the visitor's zone. */
   slotDay: (d: Date, timeZone: string) => d.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', timeZone }),
   /** A calendar day (local-midnight Date). */
