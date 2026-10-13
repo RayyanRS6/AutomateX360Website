@@ -329,10 +329,12 @@ export async function POST(request: Request): Promise<Response> {
 
   // 2. Tag + note in GHL, and the sheet/WhatsApp alert, side by side. On a GHL
   // failure the alert says why, so a broken token or setting shows up at once.
+  // Both sites can share one sheet, so Notes says which site the booking came from.
+  const theirNotes = [lead.notes ? `Their notes: ${lead.notes}` : '', 'Source: Studio website'].filter(Boolean).join(' · ');
   const notes =
     ghlResult?.status === 'failed'
-      ? `${ghlResult.unsure ? '⚠️ MAYBE NOT in your GHL calendar: check GHL before adding it.' : '⚠️ NOT in your GHL calendar, add it manually.'} GHL said: ${ghlResult.reason.replace(/\.+$/, '')}. ${lead.notes}`.trim()
-      : lead.notes;
+      ? `${ghlResult.unsure ? '⚠️ MAYBE NOT in your GHL calendar: check GHL before adding it.' : '⚠️ NOT in your GHL calendar, add it manually.'} GHL said: ${ghlResult.reason.replace(/\.+$/, '')}. ${theirNotes}`
+      : theirNotes;
   const [, sheetOk] = await Promise.all([
     ghlResult?.status === 'booked' && ghl ? finishInGhl(ghl, ghlResult.contactId, `Booked via the studio website.\n${details}`) : null,
     sheet ? sendToSheet(sheet.url, sheet.secret, sheetFields(lead, ownerTimeZone, notes)) : false,
