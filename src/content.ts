@@ -25,6 +25,10 @@ export const config = {
   minBudget: '$2,000',
   callMinutes: 20,
   /**
+   * Fallback hours, used only when GHL isn't connected (and in `npm run dev`).
+   * With GHL connected, visitors see exactly your GHL calendar's free times
+   * and the hours, notice and days-ahead below are ignored.
+   *
    * Your working hours, in YOUR time zone. Visitors see them converted to
    * theirs: 14:00 to 03:00 Pakistan time is about 4 AM to 5 PM in New York
    * (winter), 1 PM to 2 AM in Dubai. A shift that ends after midnight belongs
@@ -40,9 +44,9 @@ export const config = {
   },
   /** Visitors' time zone when their device doesn't report one (Eastern Time). */
   defaultVisitorTimeZone: 'America/New_York',
-  /** The earliest a call can be booked, in hours from now. */
+  /** Fallback only: the earliest a call can be booked, in hours from now. */
   minNoticeHours: 4,
-  /** How many days ahead the calendar shows. */
+  /** Fallback only: how many days ahead the calendar shows. */
   bookingDaysAhead: 30,
 };
 
@@ -258,10 +262,11 @@ export const booking = {
     business: 'Please add your business name.',
     budgetAmount: 'Tell us roughly how much you have in mind.',
     submit: 'That didn’t go through. Please try again, or pick another time.',
-    slotGone: 'That time has passed. Please pick another.',
-    slotTaken: 'Sorry, that time was just booked. Please pick another.',
+    slotGone: 'That time is no longer available. Please pick another.',
+    slotTaken: 'Sorry, that time is no longer available. Please pick another.',
   },
   slotsLoading: 'Checking available times…',
+  noSlotsAtAll: 'No times are open right now. Please check back soon.',
   slotsError: 'Couldn’t load the available times.',
   retry: 'Try again',
   timeHeading: 'Pick a day and time',

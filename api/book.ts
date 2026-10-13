@@ -27,6 +27,8 @@ const MAX_BODY_BYTES = 10_000;
 const MAX_DAYS_AHEAD = 62;
 const SHEET_TIMEOUT_MS = 20_000;
 const GHL_BASE = 'https://services.leadconnectorhq.com';
+// GHL's API version for each part of its API.
+const GHL_VERSIONS = { contacts: '2021-07-28', calendars: '2021-04-15' };
 const GHL_TIMEOUT_MS = 10_000;
 const GHL_TAG = 'studio-website';
 // The owner is in Islamabad, Pakistan. OWNER_TIMEZONE in Vercel can override it.
@@ -117,7 +119,8 @@ function budgetLabel(lead: Lead) {
 /* ---------------- GoHighLevel ---------------- */
 
 type GhlConfig = { token: string; locationId: string; calendarId: string };
-type GhlResult = { status: 'booked'; contactId: string } | { status: 'taken' } | { status: 'failed'; reason: string };
+/** `unsure`: GHL timed out or errored on the appointment itself, so it may have been booked anyway. */
+type GhlResult = { status: 'booked'; contactId: string } | { status: 'taken' } | { status: 'failed'; reason: string; unsure?: boolean };
 
 function ghlConfig(): GhlConfig | null {
   const { GHL_TOKEN, GHL_LOCATION_ID, GHL_CALENDAR_ID } = process.env;
@@ -130,7 +133,7 @@ async function ghlPost(cfg: GhlConfig, path: string, body: unknown): Promise<{ o
       method: 'POST',
       headers: {
         Authorization: `Bearer ${cfg.token}`,
-        Version: process.env.GHL_API_VERSION || 'v3',
+        Version: process.env.GHL_API_VERSION || (path.startsWith('/contacts') ? GHL_VERSIONS.contacts : GHL_VERSIONS.calendars),
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
@@ -193,8 +196,12 @@ async function bookInGhl(cfg: GhlConfig, lead: Lead, description: string): Promi
   if (appt.ok) return { status: 'booked', contactId };
   const msg = ghlMessage(appt.data);
   // GHL checks the slot is still free; if not, the visitor picks another time.
-  if ([400, 409, 422].includes(appt.status) && /slot|availab|booked|taken|conflict/i.test(msg)) return { status: 'taken' };
-  return { status: 'failed', reason: `appointment ${appt.status}: ${msg}` };
+  if ([400, 409, 422].includes(appt.status) && /slot|availab|booked|taken|conflict/i.test(msg)) {
+    // Logged so repeated refusals of times GHL itself listed show up in Vercel's logs.
+    console.warn(`GHL refused the time ${lead.start.toISOString()} (${appt.status}): ${msg}`);
+    return { status: 'taken' };
+  }
+  return { status: 'failed', reason: `appointment ${appt.status}: ${msg}`, unsure: appt.status === 0 || appt.status >= 500 };
 }
 
 /** Adds the single tag and a note with the lead's details. Failures are logged only. */
@@ -318,9 +325,12 @@ export async function POST(request: Request): Promise<Response> {
     if (ghlResult.status === 'failed') console.error(`GHL booking failed: ${ghlResult.reason}`);
   }
 
-  // 2. Tag + note in GHL, and the sheet/WhatsApp alert, side by side.
+  // 2. Tag + note in GHL, and the sheet/WhatsApp alert, side by side. On a GHL
+  // failure the alert says why, so a broken token or setting shows up at once.
   const notes =
-    ghlResult?.status === 'failed' ? `⚠️ NOT in your GHL calendar (GHL error): add it manually. ${lead.notes}`.trim() : lead.notes;
+    ghlResult?.status === 'failed'
+      ? `${ghlResult.unsure ? '⚠️ MAYBE NOT in your GHL calendar: check GHL before adding it.' : '⚠️ NOT in your GHL calendar, add it manually.'} GHL said: ${ghlResult.reason.replace(/\.+$/, '')}. ${lead.notes}`.trim()
+      : lead.notes;
   const [, sheetOk] = await Promise.all([
     ghlResult?.status === 'booked' && ghl ? finishInGhl(ghl, ghlResult.contactId, `Booked via the studio website.\n${details}`) : null,
     sheet ? sendToSheet(sheet.url, sheet.secret, sheetFields(lead, ownerTimeZone, notes)) : false,

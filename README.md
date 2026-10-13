@@ -37,7 +37,10 @@ Items marked `TODO` need your real answer before ads go live:
   until a real domain is set).
 - How the call happens (phone or video), the phone-field hint and the privacy
   line under the booking form.
-- Your real booking hours, once the calendar is connected.
+
+Your booking hours, minimum notice and how far ahead people can book are set
+on the GHL calendar (see "Set up GoHighLevel" below), not in `src/content.ts`:
+`config.availability` there is only the fallback used when GHL isn't connected.
 
 ## Add or change portfolio sites
 
@@ -79,7 +82,8 @@ agent's API key lives in the sheet script's Script Properties.
    minimum notice. These settings decide which times visitors see.
 2. **Private Integration token:** Settings → Private Integrations. Use a token
    with the scopes `calendars.readonly`, `calendars/events.write` and
-   `contacts.write`.
+   `contacts.write`. All three are needed: without `contacts.write`, GHL
+   refuses the contact, so no appointment is booked and the time stays open.
 3. Note your **Location ID** (Settings → Business Profile, or the part after
    `/location/` in the GHL address bar) and the **Calendar ID** (in the
    calendar's settings or its booking link).
@@ -133,6 +137,14 @@ If saving fails, the visitor sees "That didn't go through. Please try again"
 logs. A WhatsApp problem never blocks the booking: the row is still saved,
 and the script's error shows under Executions in Apps Script.
 
+If GHL refuses a booking for any reason other than the time being taken (a
+missing token scope, a wrong ID), the lead still reaches the sheet and
+WhatsApp, marked **"⚠️ NOT in your GHL calendar"** followed by GHL's own
+error. That time is not blocked in GHL, so fix the cause straight away and
+add the call to GHL by hand. **"⚠️ MAYBE NOT"** means GHL timed out or had an
+error of its own while booking: check GHL before adding the call, since it
+may have been booked anyway.
+
 ### Test locally
 
 `npm run dev` has no server functions; the form completes without sending.
@@ -152,8 +164,13 @@ variables in a `.env.local` file (git-ignored).
   zone or browser language. Numbers are sent in international format (+971…).
 - Every booking is saved and sent to you with the call time in **your** time
   (Pakistan) and in **theirs**.
-- The page also applies `minNoticeHours` (4) and `bookingDaysAhead` (30) on
-  top of GHL's own settings.
+- With GHL connected, the page adds no rules of its own: GHL's availability,
+  minimum notice and booking window decide every time shown. The page reads
+  the calendar's minimum notice too, so while a visitor is choosing, a time
+  disappears as soon as GHL would stop accepting it. It loads up to 30 days of
+  free times (the most GHL returns at once). `minNoticeHours` and
+  `bookingDaysAhead` in `src/content.ts` only apply to the fallback hours.
+
 ## Performance
 
 - Motion only animates `transform` and `opacity`. Looping animations play a

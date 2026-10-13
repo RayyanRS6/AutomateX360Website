@@ -1,7 +1,9 @@
 // Booking logic for the UI.
 //
-// Availability is your working hours, defined in YOUR time zone
-// (config.availability in src/content.ts). Every open slot is a fixed moment
+// Availability is your GoHighLevel calendar's free times (loaded via
+// api/slots.ts). When GHL isn't connected, or in plain `npm run dev`, it falls
+// back to your working hours in YOUR time zone (config.availability in
+// src/content.ts). Every open slot is a fixed moment
 // in time; each visitor sees those moments converted into their own time zone,
 // which is read from their device settings (no permission prompt) and can be
 // changed in the booking card. Bookings are sent to api/book.ts.
@@ -164,6 +166,8 @@ const toMinutes = (hhmm: string) => {
  * replace the hours in config.availability, so booked times never show.
  */
 let remoteSlots: Date[] | null = null;
+/** GHL's minimum scheduling notice: a time drops off as soon as GHL would refuse it. */
+let remoteNoticeMs = 0;
 let slotsVersion = 0;
 
 /**
@@ -183,8 +187,9 @@ export async function fetchAvailability(fresh = false): Promise<'ghl' | 'local'>
     return 'local';
   }
   if (!res.ok) throw new Error(`Availability failed (${res.status})`);
-  const data = (await res.json()) as { source?: string; slots?: string[] };
+  const data = (await res.json()) as { source?: string; slots?: string[]; noticeMinutes?: number };
   remoteSlots = data.source === 'ghl' && Array.isArray(data.slots) ? data.slots.map((s) => new Date(s)).filter((d) => !Number.isNaN(d.getTime())) : null;
+  remoteNoticeMs = Math.max(0, Number(data.noticeMinutes) || 0) * 60_000;
   slotsVersion++;
   return remoteSlots ? 'ghl' : 'local';
 }
@@ -192,19 +197,20 @@ export async function fetchAvailability(fresh = false): Promise<'ghl' | 'local'>
 let slotCache: { key: string; slots: Date[] } | null = null;
 
 /**
- * Every open slot from now (plus the minimum notice) to the end of the booking
- * window, as exact moments in time: your GHL free times when connected,
- * otherwise your shifts from config.availability in your own time zone (a
- * shift that ends after midnight belongs to the day it starts).
+ * Every open slot, as exact moments in time. With GHL connected: exactly your
+ * GHL free times (GHL's own notice, booking window and existing bookings
+ * decide them); as the clock moves, a time drops off once it is inside GHL's
+ * minimum notice, the moment GHL would stop accepting it. Otherwise:
+ * your shifts from config.availability in your own time zone (a shift that
+ * ends after midnight belongs to the day it starts), from now plus the minimum
+ * notice to the end of the booking window.
  */
 export function openSlots(now = new Date()): Date[] {
   const key = `${Math.floor(now.getTime() / 60_000)}|${slotsVersion}`;
   if (slotCache?.key === key) return slotCache.slots;
 
-  const earliestAt = now.getTime() + config.minNoticeHours * 3_600_000;
-  const latestAt = now.getTime() + config.bookingDaysAhead * DAY_MS;
   if (remoteSlots) {
-    const slots = remoteSlots.filter((s) => s.getTime() >= earliestAt && s.getTime() <= latestAt);
+    const slots = remoteSlots.filter((s) => s.getTime() > now.getTime() + remoteNoticeMs);
     slotCache = { key, slots };
     return slots;
   }
@@ -213,8 +219,8 @@ export function openSlots(now = new Date()): Date[] {
   const startMin = toMinutes(start);
   let endMin = toMinutes(end);
   if (endMin <= startMin) endMin += 24 * 60; // overnight shift
-  const earliest = earliestAt;
-  const latest = latestAt;
+  const earliest = now.getTime() + config.minNoticeHours * 3_600_000;
+  const latest = now.getTime() + config.bookingDaysAhead * DAY_MS;
 
   const today = partsIn(now, timeZone);
   const slots: Date[] = [];

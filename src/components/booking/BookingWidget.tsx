@@ -141,6 +141,18 @@ export function BookingWidget() {
     };
   }, []);
 
+  // While they pick a time or fill in details, keep the clock moving (times drop
+  // off as GHL stops accepting them) and re-check GHL every couple of minutes.
+  useEffect(() => {
+    if (step !== 'time' && step !== 'details') return;
+    const id = window.setInterval(() => {
+      if (document.visibilityState !== 'visible') return;
+      setNow(new Date());
+      if (slotsLoadedAt.current && Date.now() - slotsLoadedAt.current > SLOTS_MAX_AGE_MS) loadSlots({ background: true });
+    }, 60_000);
+    return () => window.clearInterval(id);
+  }, [step]);
+
   // Keep the chosen day and time valid as the clock moves and fresh times arrive.
   useEffect(() => {
     // Once booked, nothing on the confirmation depends on the clock.
@@ -152,11 +164,10 @@ export function BookingWidget() {
     }
     if (slot && !isSlotOpen(slot, now)) {
       setSlot(null);
+      // Say why the picked time went away, so it doesn't just vanish.
+      if (step === 'time' || step === 'details') setErrors({ submit: e.slotGone });
       // The details step needs a slot: send the visitor back to pick another.
-      if (step === 'details') {
-        setStep('time');
-        setErrors({ submit: e.slotGone });
-      }
+      if (step === 'details') setStep('time');
     }
     // Only re-check when the clock moves or new times arrive.
   }, [now, slotsTick, slotsStatus]);
@@ -213,13 +224,14 @@ export function BookingWidget() {
       return;
     }
     if (!slot || !budget) return;
-    // Re-check against the booking rules at the real current time (a tab can
-    // sit open past midnight or past the minimum notice).
+    // Re-check against the real current time (a tab can sit open until the
+    // picked time is too soon to book or has passed).
     if (!isSlotOpen(slot, new Date())) {
       setSlot(null);
       setNow(new Date());
       setStep('time');
       setErrors({ submit: e.slotGone });
+      loadSlots({ fresh: true, background: true });
       return;
     }
     const request = { start: slot, name: form.name.trim(), email: form.email.trim(), business: form.business.trim(), timeZone: tz };
@@ -470,7 +482,16 @@ export function BookingWidget() {
                 </div>
               )}
 
-              {ready && month && (
+              {ready && !anyOpen && (
+                <div role="status" className="mt-8 min-h-[200px]">
+                  <p className="text-[15px] text-stone">{booking.noSlotsAtAll}</p>
+                  <button type="button" className="btn-ghost mt-4" onClick={() => loadSlots({ fresh: true })}>
+                    {booking.retry}
+                  </button>
+                </div>
+              )}
+
+              {ready && month && anyOpen && (
                 <div className="mt-6 grid gap-7 md:grid-cols-[1.1fr_1fr] md:gap-8">
                   <Calendar
                     now={now}
@@ -489,7 +510,7 @@ export function BookingWidget() {
                     <p className="mt-1 flex items-center gap-1.5 text-[12.5px] text-stone">
                       <Globe size={13} aria-hidden /> {`${booking.timesIn} ${zoneName(tz, slots[0] ?? now)}`}
                     </p>
-                    {(!anyOpen || slots.length === 0) && <p className="mt-4 text-[14px] text-stone">{booking.noSlots}</p>}
+                    {slots.length === 0 && <p className="mt-4 text-[14px] text-stone">{booking.noSlots}</p>}
                     {slotGroups.map((g) => (
                       <div key={g.label} className="mt-4">
                         <p className="text-[11.5px] font-semibold uppercase tracking-[0.14em] text-stone">{g.label}</p>
