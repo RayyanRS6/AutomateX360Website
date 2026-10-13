@@ -94,7 +94,7 @@ function ProofCard({ w, wide }: { w: Work; wide: boolean }) {
       <figcaption className="mt-4 px-1">
         <span className="block text-[16px] font-semibold leading-tight sm:text-[17px]">{w.name}</span>
         <span className="mt-1 block text-pretty text-[13.5px] text-stone sm:text-[14px]">{w.industry}</span>
-        <span className="mt-2 inline-flex items-center gap-1 text-[13.5px] font-semibold text-ink underline decoration-ink/25 underline-offset-4 transition group-hover:decoration-ink">
+        <span className="proof-visit loop mt-2 inline-flex items-center gap-1 text-[13.5px] font-semibold text-ink underline decoration-ink/25 underline-offset-4 transition group-hover:decoration-ink">
           {proof.visit}
           <ArrowUpRight size={14} className="text-ember-deep" aria-hidden />
         </span>

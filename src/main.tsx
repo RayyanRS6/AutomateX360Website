@@ -4,6 +4,7 @@ import '@fontsource/instrument-serif/latin-400.css';
 import '@fontsource/instrument-serif/latin-400-italic.css';
 import '@fontsource-variable/inter-tight/wght.css';
 import './index.css';
+import './playful.css';
 import App from './App';
 
 const root = document.getElementById('root')!;

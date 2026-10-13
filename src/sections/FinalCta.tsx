@@ -16,15 +16,15 @@ export function FinalCta() {
             {finalCta.sub}
           </p>
           <div className="reveal my-8 h-px max-w-lg bg-white/12" style={vars({ '--d': '120ms' })} />
-          <ul className="reveal grid max-w-lg gap-3.5 sm:grid-cols-2 sm:gap-x-8" style={vars({ '--d': '160ms' })}>
-            {hero.promises.map((p) => (
+          <ul className="fc-list loop reveal grid max-w-lg gap-3.5 sm:grid-cols-2 sm:gap-x-8" style={vars({ '--d': '160ms' })}>
+            {hero.promises.map((p, i) => (
               <li key={p} className="flex items-center gap-3 text-[16px] font-semibold sm:text-[17px]">
-                <span aria-hidden className="size-2.5 shrink-0 rounded-[2px] bg-ember" />
+                <span aria-hidden className="fc-dot size-2.5 shrink-0 rounded-[2px] bg-ember" style={vars({ '--i': i })} />
                 {p}
               </li>
             ))}
           </ul>
-          <div data-cta-zone className="reveal mt-10 flex flex-col items-start gap-3.5" style={vars({ '--d': '200ms' })}>
+          <div data-cta-zone className="cta-nudge loop reveal mt-10 flex flex-col items-start gap-3.5" style={vars({ '--d': '200ms' })}>
             <CtaLink className="w-full sm:w-auto">{cta.label}</CtaLink>
             <p className="pl-1 text-[14px] text-fog">{finalCta.note}</p>
           </div>

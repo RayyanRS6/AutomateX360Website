@@ -50,7 +50,7 @@ const a = offer.art;
 /** Step 1: a call in progress. */
 function CallArt() {
   return (
-    <div className="absolute inset-0 grid place-items-center px-5 pt-6" aria-hidden>
+    <div className="call-art loop absolute inset-0 grid place-items-center px-5 pt-6" aria-hidden>
       <div className="glass-soft w-full max-w-[290px] rounded-2xl p-3.5">
         <div className="flex items-center justify-between text-[11px] font-medium text-ink/70">
           <span className="flex items-center gap-1.5">
@@ -59,13 +59,13 @@ function CallArt() {
           <span className="font-mono">{a.timer}</span>
         </div>
         <div className="mt-3 flex items-center gap-3">
-          <span className="grid size-11 place-items-center rounded-full bg-ink text-[11px] font-semibold text-cream">{a.you}</span>
+          <span className="talk-a grid size-11 place-items-center rounded-full bg-ink text-[11px] font-semibold text-cream">{a.you}</span>
           <span className="loop wave flex h-8 flex-1 items-center justify-center gap-[3px]">
             {WAVE.map((h, i) => (
               <i key={i} className="w-[3px] rounded-full bg-ember" style={vars({ height: `${h}px`, '--i': i })} />
             ))}
           </span>
-          <span className="grid size-11 place-items-center rounded-full bg-ember font-serif text-xl italic text-ink">{a.us}</span>
+          <span className="talk-b grid size-11 place-items-center rounded-full bg-ember font-serif text-xl italic text-ink">{a.us}</span>
         </div>
         <div className="mt-3 flex flex-wrap gap-1.5 text-[10.5px] font-medium text-ink/65">
           {a.topics.map((t) => (
@@ -82,13 +82,13 @@ function CallArt() {
 /** Step 2: a homepage going from wireframe to design. */
 function DesignArt() {
   return (
-    <div className="absolute inset-x-5 bottom-0 top-12 overflow-hidden rounded-t-xl bg-white shadow-[0_20px_40px_-20px_rgb(17_17_17/0.35)] ring-1 ring-ink/5" aria-hidden>
+    <div className="design-art loop absolute inset-x-5 bottom-0 top-12 overflow-hidden rounded-t-xl bg-white shadow-[0_20px_40px_-20px_rgb(17_17_17/0.35)] ring-1 ring-ink/5" aria-hidden>
       <div className="flex items-center gap-1 border-b border-ink/5 px-2.5 py-1.5">
         <i className="size-1.5 rounded-full bg-ink/15" />
         <i className="size-1.5 rounded-full bg-ink/15" />
         <i className="size-1.5 rounded-full bg-ink/15" />
         {/* Sits in the empty chrome bar so it never covers the mock's headline. */}
-        <span className="ml-auto rounded-full bg-[#157244] px-2 text-[9.5px] font-bold leading-[15px] text-white">{a.free}</span>
+        <span className="da-badge ml-auto rounded-full bg-[#157244] px-2 text-[9.5px] font-bold leading-[15px] text-white">{a.free}</span>
       </div>
       <div className="grid h-full grid-cols-2">
         <div className="space-y-2 border-r border-dashed border-ink/15 p-3">
@@ -100,12 +100,12 @@ function DesignArt() {
         </div>
         <div className="space-y-2 bg-[#1c1a17] p-3">
           <div className="h-1.5 w-1/2 rounded bg-white/25" />
-          <p className="mt-2 font-serif text-[17px] leading-[1.02] text-[#f3eee6]">
+          <p className="da-1 mt-2 font-serif text-[17px] leading-[1.02] text-[#f3eee6]">
             {`${a.mock.plain} `}
             <em>{a.mock.em}</em>
           </p>
-          <div className="h-12 rounded-md bg-[linear-gradient(135deg,#c9a27a,#6d5440)]" />
-          <div className="h-3 w-[45%] rounded-full bg-ember" />
+          <div className="da-2 h-12 rounded-md bg-[linear-gradient(135deg,#c9a27a,#6d5440)]" />
+          <div className="da-3 h-3 w-[45%] rounded-full bg-ember" />
         </div>
       </div>
     </div>
@@ -115,13 +115,13 @@ function DesignArt() {
 /** Step 3: love it, or walk away owing nothing. */
 function DecideArt() {
   return (
-    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2.5 px-6 pt-6" aria-hidden>
-      <div className="relative flex w-full max-w-[260px] items-center justify-between rounded-full bg-ember px-4 py-2.5 text-[13px] font-semibold text-ink shadow-[0_12px_24px_-12px_rgb(240_68_30/0.9)]">
+    <div className="decide-art loop absolute inset-0 flex flex-col items-center justify-center gap-2.5 px-6 pt-6" aria-hidden>
+      <div className="dc-love relative flex w-full max-w-[260px] items-center justify-between rounded-full bg-ember px-4 py-2.5 text-[13px] font-semibold text-ink shadow-[0_12px_24px_-12px_rgb(240_68_30/0.9)]">
         <span className="flex items-center gap-1.5">
-          <Heart size={14} fill="currentColor" /> {a.love}
+          <Heart size={14} fill="currentColor" className="dc-heart" /> {a.love}
         </span>
         <span>{a.build}</span>
-        <svg className="absolute -bottom-4 right-6 size-6 drop-shadow" viewBox="0 0 24 24">
+        <svg className="dc-cursor absolute -bottom-4 right-6 size-6 drop-shadow" viewBox="0 0 24 24">
           <path d="M5 3l14 7-6 2-2 6z" fill="#111" stroke="#fff" strokeWidth="1.5" strokeLinejoin="round" />
         </svg>
       </div>

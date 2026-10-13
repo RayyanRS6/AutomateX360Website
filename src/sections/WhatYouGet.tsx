@@ -57,10 +57,10 @@ export function WhatYouGet() {
 
           {/* Ownership */}
           <article className="glass-dark reveal col-span-2 flex flex-col justify-between gap-8 overflow-hidden rounded-[26px] p-6 sm:p-7" style={vars({ '--d': '180ms' })}>
-            <ul className="flex flex-wrap gap-2" aria-label={value.ownershipLabel}>
-              {value.ownership.map((x) => (
+            <ul className="own-list loop flex flex-wrap gap-2" aria-label={value.ownershipLabel}>
+              {value.ownership.map((x, i) => (
                 <li key={x} className="flex items-center gap-1.5 rounded-full bg-white/[0.06] py-1.5 pl-2 pr-3 text-[13px] font-medium ring-1 ring-white/10">
-                  <span className="grid size-5 place-items-center rounded-full bg-ember text-ink">
+                  <span className="own-check grid size-5 place-items-center rounded-full bg-ember text-ink" style={vars({ '--i': i })}>
                     <Check size={12} strokeWidth={3} aria-hidden />
                   </span>
                   {x}
@@ -83,11 +83,11 @@ type Item = (typeof value.items)[number];
 function StatCard({ item, delay, className = '' }: { item: Item; delay: number; className?: string }) {
   return (
     <article
-      className={`glass-dark reveal col-span-1 flex flex-col justify-between gap-6 rounded-[26px] p-5 sm:p-7 md:col-span-2 ${className}`}
+      className={`glass-dark reveal stat-card loop col-span-1 flex flex-col justify-between gap-6 rounded-[26px] p-5 sm:p-7 md:col-span-2 ${className}`}
       style={vars({ '--d': `${delay}ms` })}
     >
       <p className="flex items-baseline gap-2">
-        <span className="font-serif text-[clamp(3.6rem,2.6rem+3vw,5.4rem)] leading-[0.8] text-ember">{'stat' in item ? item.stat : ''}</span>
+        <span className="stat-num inline-block font-serif text-[clamp(3.6rem,2.6rem+3vw,5.4rem)] leading-[0.8] text-ember">{'stat' in item ? item.stat : ''}</span>
         <span className="text-[12px] font-medium uppercase tracking-[0.14em] text-fog">{'statNote' in item ? item.statNote : ''}</span>
       </p>
       <div>
@@ -144,9 +144,9 @@ function PriceTags() {
 /** Three identical template tiles and the one that is yours. */
 function TemplateArt() {
   return (
-    <div className="flex items-end gap-2.5 sm:gap-3.5" aria-hidden>
+    <div className="tpl-art loop flex items-end gap-2.5 sm:gap-3.5" aria-hidden>
       {[0, 1, 2].map((i) => (
-        <div key={i} className="w-[22%] max-w-[120px] rounded-lg bg-white/[0.05] p-2 ring-1 ring-white/[0.07]">
+        <div key={i} className="tpl-tile w-[22%] max-w-[120px] rounded-lg bg-white/[0.05] p-2 ring-1 ring-white/[0.07]">
           <div className="h-1.5 w-2/3 rounded bg-white/15" />
           <div className="mt-2 h-8 rounded bg-white/10 sm:h-10" />
           <div className="mt-2 h-1.5 w-full rounded bg-white/10" />
@@ -154,7 +154,7 @@ function TemplateArt() {
           <p className="mt-2 text-[9px] font-medium uppercase tracking-[0.14em] text-white/55">{value.art.template}</p>
         </div>
       ))}
-      <div className="w-[26%] max-w-[140px] -translate-y-3 rotate-[-3deg] rounded-lg bg-cream p-2 text-ink shadow-[0_24px_40px_-16px_rgb(240_68_30/0.55)]">
+      <div className="tpl-yours w-[26%] max-w-[140px] -translate-y-3 rotate-[-3deg] rounded-lg bg-cream p-2 text-ink shadow-[0_24px_40px_-16px_rgb(240_68_30/0.55)]">
         <div className="h-1.5 w-1/2 rounded bg-ink/30" />
         <p className="mt-2 font-serif text-[15px] leading-none sm:text-[19px]">
           {`${value.art.yours.plain} `}
@@ -170,13 +170,13 @@ function TemplateArt() {
 /** Pages stacking up, with room for more. */
 function ScaleArt() {
   return (
-    <div className="flex flex-wrap items-center gap-2" aria-hidden>
-      {value.scalePages.map((p) => (
-        <span key={p} className="rounded-lg bg-white/[0.07] px-3 py-1.5 text-[13px] font-medium ring-1 ring-white/10">
+    <div className="scale-art loop flex flex-wrap items-center gap-2" aria-hidden>
+      {value.scalePages.map((p, i) => (
+        <span key={p} className="sa-page rounded-lg bg-white/[0.07] px-3 py-1.5 text-[13px] font-medium ring-1 ring-white/10" style={vars({ '--i': i })}>
           {p}
         </span>
       ))}
-      <span className="flex items-center gap-1 rounded-lg border border-dashed border-ember/60 px-3 py-1.5 text-[13px] font-medium text-ember">
+      <span className="sa-add flex items-center gap-1 rounded-lg border border-dashed border-ember/60 px-3 py-1.5 text-[13px] font-medium text-ember">
         <Plus size={13} strokeWidth={2.6} /> {value.art.addPage}
       </span>
     </div>

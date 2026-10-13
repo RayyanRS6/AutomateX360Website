@@ -24,7 +24,7 @@ export function Hero() {
 
           <p className="mt-5 max-w-[31rem] text-[1.0625rem] leading-[1.6] text-stone sm:mt-6 sm:text-lg">{hero.subhead}</p>
 
-          <div data-cta-zone className="mt-6 flex flex-col items-start gap-3.5 sm:mt-8">
+          <div data-cta-zone className="loop cta-nudge mt-6 flex flex-col items-start gap-3.5 sm:mt-8">
             <CtaLink className="w-full sm:w-auto">{cta.label}</CtaLink>
             <p className="pl-1 text-[14px] text-stone">
               {`${hero.ctaNote.before} `}
@@ -64,7 +64,7 @@ function HeroStage() {
   useEffect(() => (stage.current ? initPointerDepth(stage.current) : undefined), []);
 
   return (
-    <div ref={stage} className="relative mx-auto w-full max-w-[640px] lg:max-w-none">
+    <div ref={stage} className="hero-stage loop relative mx-auto w-full max-w-[640px] lg:max-w-none">
       <div className="relative aspect-[10/9] sm:aspect-[16/12] lg:aspect-[16/13]">
         {/* Desktop homepage */}
         <div data-speed="0.03" className="absolute right-0 top-0 w-[90%] sm:w-[86%] lg:w-[95%]">
@@ -96,7 +96,7 @@ function HeroStage() {
         {/* Mobile homepage */}
         <div data-speed="0.05" className="absolute bottom-0 left-0 w-[31%] sm:left-[3%] sm:w-[25%] lg:left-[-2%] lg:w-[27%]">
           <div data-depth="2" className="enter-rise" style={vars({ '--d': '260ms' })}>
-            <PhoneFrame>
+            <PhoneFrame className="float-phone">
               <PhoneMock />
             </PhoneFrame>
           </div>
@@ -105,7 +105,7 @@ function HeroStage() {
         {/* Frosted chip: the free mockup */}
         <div aria-hidden data-speed="0.12" className="absolute bottom-[9%] right-[1%] sm:bottom-auto sm:right-[-1%] sm:top-[52%] lg:right-[-3%] lg:top-[47%]">
           <div data-depth="3.4" className="enter-pop" style={vars({ '--d': '750ms' })}>
-            <div className="glass flex items-center gap-3 rounded-2xl py-2.5 pl-2.5 pr-4 sm:py-3 sm:pl-3 sm:pr-5">
+            <div className="glass float-a flex items-center gap-3 rounded-2xl py-2.5 pl-2.5 pr-4 sm:py-3 sm:pl-3 sm:pr-5">
               <span className="grid size-9 place-items-center rounded-xl bg-ink text-cream sm:size-10">
                 <Check size={18} strokeWidth={2.6} />
               </span>
@@ -123,7 +123,7 @@ function HeroStage() {
         {/* Frosted chip: the call (hidden on the smallest screens to keep it calm) */}
         <div aria-hidden data-speed="0.06" className="absolute bottom-[4%] right-[22%] hidden sm:block lg:bottom-[9%] lg:right-[12%]">
           <div data-depth="2.6" className="enter-pop" style={vars({ '--d': '950ms' })}>
-            <div className="glass flex items-center gap-3 rounded-2xl py-2.5 pl-2.5 pr-5">
+            <div className="glass float-b flex items-center gap-3 rounded-2xl py-2.5 pl-2.5 pr-5">
               <span className="grid size-10 place-items-center rounded-xl bg-white text-ember-deep ring-1 ring-ink/5">
                 <CalendarCheck2 size={19} strokeWidth={2.2} />
               </span>

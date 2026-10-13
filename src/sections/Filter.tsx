@@ -22,10 +22,10 @@ export function Filter() {
               </span>
               {filter.yes.title}
             </h3>
-            <ul className="mt-6 space-y-4">
-              {filter.yes.items.map((t) => (
+            <ul className="yes-list loop mt-6 space-y-4">
+              {filter.yes.items.map((t, i) => (
                 <li key={t} className="flex gap-3.5 text-pretty text-[17px] leading-snug sm:text-[18px]">
-                  <Check size={20} strokeWidth={2.6} className="mt-0.5 shrink-0 text-ember-deep" aria-hidden />
+                  <Check size={20} strokeWidth={2.6} className="yes-check mt-0.5 shrink-0 text-ember-deep" style={vars({ '--i': i })} aria-hidden />
                   {t}
                 </li>
               ))}
@@ -39,10 +39,10 @@ export function Filter() {
               </span>
               {filter.no.title}
             </h3>
-            <ul className="mt-6 space-y-4">
-              {filter.no.items.map((t) => (
+            <ul className="no-list loop mt-6 space-y-4">
+              {filter.no.items.map((t, i) => (
                 <li key={t} className="flex gap-3.5 text-pretty text-[17px] leading-snug text-stone sm:text-[18px]">
-                  <X size={20} strokeWidth={2.4} className="mt-0.5 shrink-0 text-ink/35" aria-hidden />
+                  <X size={20} strokeWidth={2.4} className="no-x mt-0.5 shrink-0 text-ink/35" style={vars({ '--i': i })} aria-hidden />
                   {t}
                 </li>
               ))}

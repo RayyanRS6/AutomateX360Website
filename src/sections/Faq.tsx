@@ -41,7 +41,7 @@ function FaqItem({ q, a, i }: { q: string; a: string; i: number }) {
           <span
             aria-hidden
             className={`grid size-9 shrink-0 place-items-center rounded-full border transition-[rotate,background-color,color,border-color] duration-300 ${
-              open ? 'rotate-45 border-ink bg-ink text-cream' : 'border-ink/15 group-hover:border-ink/40'
+              open ? 'rotate-45 border-ink bg-ink text-cream' : 'border-ink/15 group-hover:rotate-90 group-hover:border-ink/40'
             }`}
           >
             <Plus size={16} strokeWidth={2.4} />

@@ -114,7 +114,7 @@ export const swingProps = {
 /** Black tag with the struck-through price, sized by the surrounding font. */
 export function PriceTag({ price }: { price: string }) {
   return (
-    <span className="price-tag">
+    <span className="price-tag loop" {...swingProps}>
       <span>{price}</span>
       <span className="strike" aria-hidden />
     </span>

@@ -826,7 +826,7 @@
 }
 @media (prefers-reduced-motion: no-preference) {
   html:not(.lite) .wave.playing i {
-    animation: wave 0.9s ease-in-out 7 alternate; /* odd count: ends on full height, its resting state */
+    animation: wave 0.9s ease-in-out infinite alternate;
     animation-delay: calc(var(--i) * -0.13s);
   }
 }
