@@ -14,3 +14,7 @@ dist-ssr
 design i like/
 my ads/
 .claude/
+
+# Compiled output of the TypeScript function (Vercel builds it itself).
+api/*.js
+api/*.js.map
