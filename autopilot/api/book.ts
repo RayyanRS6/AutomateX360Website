@@ -8,7 +8,7 @@
 //   2. Google Sheet: forwards the booking to the sheet script
 //      (google-apps-script/Code.gs), which saves a row and sends you WhatsApp.
 //      Same sheet and columns as the studio site: the "Budget" column gets the
-//      plan and what they need, and their answers go in "Notes".
+//      plan and what they need, and the source goes in "Notes".
 // Either part can be switched off by leaving its environment variables empty.
 //
 // Secrets stay off the website: the GHL token, the sheet's URL and its
@@ -18,22 +18,16 @@
 // Self-contained on purpose (no imports from other files): Vercel runs it as
 // its own Node.js function.
 
-// Keep in step with booking.siteOptions / replyOptions in src/content.ts.
+// Keep in step with booking.siteOptions in src/content.ts.
 const SITE_STATUS: Record<string, string> = {
   maintain: 'Has a website, wants us to maintain it',
   replace: 'Has a website, wants a new one',
   new: 'No website yet, wants one built',
 };
-const REPLY_SPEED: Record<string, string> = {
-  minutes: 'Within minutes',
-  hours: 'Within a few hours',
-  nextday: 'Next day or later',
-  missed: 'Some get missed',
-};
 const PLAN = '$449/mo Website + Booking System';
 const SOURCE = 'Booking system website';
 
-const LIMITS = { name: 120, email: 200, phone: 40, business: 160, website: 200, notes: 1500, timeZone: 64, industry: 60 };
+const LIMITS = { name: 120, email: 200, phone: 40, business: 160, website: 200, notes: 1500, timeZone: 64 };
 const MAX_BODY_BYTES = 10_000;
 const MAX_DAYS_AHEAD = 62;
 const SHEET_TIMEOUT_MS = 20_000;
@@ -53,8 +47,6 @@ type Lead = {
   website: string | null;
   notes: string;
   siteStatus: string;
-  industry: string;
-  replySpeed: string;
   start: Date;
   durationMin: number;
   timeZone: string;
@@ -82,16 +74,12 @@ function parseLead(raw: Record<string, unknown>): Lead | string {
   const name = str(raw.name, LIMITS.name);
   const email = str(raw.email, LIMITS.email);
   const siteStatus = str(raw.siteStatus, 20);
-  const replySpeed = str(raw.replySpeed, 20);
-  const industry = str(raw.industry, LIMITS.industry);
   const start = new Date(str(raw.start, 40));
   const tz = str(raw.timeZone, LIMITS.timeZone);
 
   if (!name) return 'Missing name.';
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return 'Invalid email.';
   if (!Object.hasOwn(SITE_STATUS, siteStatus)) return 'Invalid website answer.';
-  if (!Object.hasOwn(REPLY_SPEED, replySpeed)) return 'Invalid reply-speed answer.';
-  if (!industry) return 'Missing business type.';
   if (Number.isNaN(start.getTime())) return 'Invalid start time.';
   const now = Date.now();
   if (start.getTime() < now || start.getTime() > now + MAX_DAYS_AHEAD * 86_400_000) return 'Start time out of range.';
@@ -106,8 +94,6 @@ function parseLead(raw: Record<string, unknown>): Lead | string {
     website: siteStatus === 'new' ? null : str(raw.website, LIMITS.website) || null,
     notes: str(raw.notes, LIMITS.notes),
     siteStatus,
-    industry,
-    replySpeed,
     start,
     durationMin: Number.isFinite(duration) && duration > 0 && duration <= 120 ? duration : 20,
     timeZone: tz && validTimeZone(tz) ? tz : 'America/New_York',
@@ -130,11 +116,6 @@ function formatWhen(d: Date, timeZone: string) {
 /** "$449/mo Website + Booking System · Has a website, wants a new one" (the sheet's "Budget" column). */
 function planLabel(lead: Lead) {
   return `${PLAN} · ${SITE_STATUS[lead.siteStatus]}`;
-}
-
-/** Their step-1 answers, for the sheet's "Notes" column and the GHL note. */
-function answers(lead: Lead) {
-  return [`Business type: ${lead.industry}`, `Replies to enquiries: ${REPLY_SPEED[lead.replySpeed]}`];
 }
 
 /* ---------------- GoHighLevel ---------------- */
@@ -334,7 +315,6 @@ export async function POST(request: Request): Promise<Response> {
     `Call (their time): ${formatWhen(lead.start, lead.timeZone)}`,
     `Plan: ${planLabel(lead)}`,
     `Website: ${lead.website ?? 'No website yet'}`,
-    ...answers(lead),
     `Phone: ${lead.phone || '-'}`,
     `Notes: ${lead.notes || '-'}`,
   ].join('\n');
@@ -349,8 +329,8 @@ export async function POST(request: Request): Promise<Response> {
 
   // 2. Tag + note in GHL, and the sheet/WhatsApp alert, side by side. On a GHL
   // failure the alert says why, so a broken token or setting shows up at once.
-  // The sheet has the studio site's columns, so their answers and the source go in Notes.
-  const theirNotes = [...answers(lead), lead.notes ? `Their notes: ${lead.notes}` : '', `Source: ${SOURCE}`].filter(Boolean).join(' · ');
+  // The sheet has the studio site's columns, so the source goes in Notes.
+  const theirNotes = [lead.notes ? `Their notes: ${lead.notes}` : '', `Source: ${SOURCE}`].filter(Boolean).join(' · ');
   const notes =
     ghlResult?.status === 'failed'
       ? `${ghlResult.unsure ? '⚠️ MAYBE NOT in your GHL calendar: check GHL before adding it.' : '⚠️ NOT in your GHL calendar, add it manually.'} GHL said: ${ghlResult.reason.replace(/\.+$/, '')}. ${theirNotes}`

@@ -12,26 +12,19 @@
 
 import { config } from '../content';
 
-/** Keep in step with booking.siteOptions / replyOptions in src/content.ts and api/book.ts. */
+/** Keep in step with booking.siteOptions in src/content.ts and api/book.ts. */
 export type SiteStatus = 'maintain' | 'replace' | 'new';
-export type ReplySpeed = 'minutes' | 'hours' | 'nextday' | 'missed';
 
 export type BookingRequest = {
   /** Keep their site, replace it, or build their first one. */
   siteStatus: SiteStatus;
   /** Their current site (null when they don't have one). */
   website: string | null;
-  /** One of booking.industries. */
-  industry: string;
-  /** How fast they reply to enquiries today. */
-  replySpeed: ReplySpeed;
   start: Date;
   durationMin: number;
   name: string;
   email: string;
   phone: string;
-  business: string;
-  notes: string;
   /** The visitor's chosen time zone (IANA name, e.g. "Asia/Dubai"). */
   timeZone: string;
 };
@@ -340,6 +333,12 @@ export function looksLikeEmail(raw: string) {
   return EMAIL_RE.test(raw.trim());
 }
 
+/** The number without its country code: 6 to 15 digits, in any format. */
+export function looksLikePhone(raw: string) {
+  const digits = raw.replace(/\D/g, '').length;
+  return digits >= 6 && digits <= 15;
+}
+
 /** Folds an iCalendar line at 75 octets without splitting a UTF-8 character (RFC 5545 §3.1). */
 function foldIcsLine(line: string) {
   const enc = new TextEncoder();
@@ -362,7 +361,7 @@ function foldIcsLine(line: string) {
 }
 
 /** An .ics file the visitor can add to any calendar app. */
-export function buildIcs(b: Pick<BookingRequest, 'start' | 'durationMin' | 'name' | 'business'>, brandName: string) {
+export function buildIcs(b: Pick<BookingRequest, 'start' | 'durationMin' | 'name'>, brandName: string) {
   const stamp = (d: Date) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
   const end = new Date(b.start.getTime() + b.durationMin * 60_000);
   const esc = (s: string) => s.replace(/[\\;,]/g, (c) => `\\${c}`).replace(/\n/g, '\\n');
@@ -373,11 +372,11 @@ export function buildIcs(b: Pick<BookingRequest, 'start' | 'durationMin' | 'name
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
     'BEGIN:VEVENT',
-    `UID:${stamp(b.start)}-${hash(b.name + b.business)}@${brandName.toLowerCase()}`,
+    `UID:${stamp(b.start)}-${hash(b.name)}@${brandName.toLowerCase()}`,
     `DTSTAMP:${stamp(new Date())}`,
     `DTSTART:${stamp(b.start)}`,
     `DTEND:${stamp(end)}`,
-    `SUMMARY:${esc(`${brandName} × ${b.business || b.name}: booking system call`)}`,
+    `SUMMARY:${esc(`${brandName} × ${b.name}: booking system call`)}`,
     `DESCRIPTION:${esc(`${b.durationMin}-minute call with ${brandName} about your website and booking system.`)}`,
     'END:VEVENT',
     'END:VCALENDAR',

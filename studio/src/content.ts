@@ -267,9 +267,9 @@ export const booking = {
     { title: 'Then your homepage, free', body: 'You see the design before you pay anything.' },
   ],
   card: { title: call, subtitle: 'Free · No obligation' },
-  steps: ['Budget', 'Time', 'Details'],
-  qualifyHeading: 'Two quick questions first.',
-  qualifyNote: 'Takes about 10 seconds.',
+  steps: ['Details', 'Time'],
+  detailsHeading: 'A few quick details.',
+  detailsNote: 'Takes about 20 seconds.',
   budgetQuestion: 'What’s your website budget?',
   // Everyone can book. Picking "under" asks for the amount, which is passed on with the lead.
   budgets: [
@@ -291,7 +291,8 @@ export const booking = {
     name: 'Please add your name.',
     emailMissing: 'Please add your email.',
     emailInvalid: 'Check the email address.',
-    business: 'Please add your business name.',
+    phoneMissing: 'Please add your phone number.',
+    phoneInvalid: 'Check the phone number.',
     budgetAmount: 'Tell us roughly how much you have in mind.',
     submit: 'That didn’t go through. Please try again, or pick another time.',
     slotGone: 'That time is no longer available. Please pick another.',
@@ -318,20 +319,14 @@ export const booking = {
     time: 'Time',
     stepOf: (n: number, total: number) => `Step ${n} of ${total}`,
   },
-  detailsHeading: 'Your details',
-  change: 'Change',
-  changeLabel: 'Change date and time',
   fields: {
     name: 'Full name',
     email: 'Email',
     phone: 'Phone',
     phoneCountry: 'Country code',
     // TODO: confirm, and confirm how the call happens (phone or video). If you
-    // phone people, make this field required and say "We'll call you on this number."
+    // phone people, say "We'll call you on this number."
     phoneHint: 'Only used to reach you about your call.',
-    business: 'Business name',
-    notes: 'What must the new site do?',
-    notesHint: 'More enquiries, a rebrand, a new location…',
     optional: 'Optional',
   },
   submit: 'Confirm my call',

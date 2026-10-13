@@ -61,14 +61,15 @@ on the GHL calendar (see "Set up GoHighLevel" below), not in `src/content.ts`:
 
 ## Booking → GoHighLevel + Google Sheet + WhatsApp
 
-When a visitor reaches the time step, the page asks `api/slots.ts` for your
-free times in your **GoHighLevel calendar**, so anything you're already booked
-for never shows. When they confirm, `api/book.ts`:
+The form has two steps: budget, website, name, email and phone, then a day
+and time. When a visitor reaches the time step, the page asks `api/slots.ts`
+for your free times in your **GoHighLevel calendar**, so anything you're
+already booked for never shows. When they confirm the time, `api/book.ts`:
 
 1. **GoHighLevel:** creates or updates the contact, books the appointment on
    your calendar (if someone took the time a moment earlier, the visitor is
    asked to pick another), then adds the tag **`studio-website`** and a note
-   with the call time, budget, website, phone and notes.
+   with the call time, budget, website and phone.
 2. **Google Sheet → WhatsApp:** forwards the booking, with a shared password,
    to the sheet script (`google-apps-script/Code.gs`), which saves a row and
    sends you a WhatsApp alert.

@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type FormEvent, type InputHTMLAttributes, type ReactNode, type TextareaHTMLAttributes } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type FormEvent, type InputHTMLAttributes, type ReactNode } from 'react';
 import { ArrowLeft, ArrowRight, CalendarDays, CalendarPlus, Check, CircleCheck, Clock, Globe, LoaderCircle, Lock } from 'lucide-react';
 import { booking, brand, config } from '../../content';
 import {
@@ -16,6 +16,7 @@ import {
   isBookable,
   isSlotOpen,
   looksLikeEmail,
+  looksLikePhone,
   looksLikeUrl,
   normaliseUrl,
   openSlots,
@@ -24,33 +25,39 @@ import {
   type BudgetId,
 } from '../../lib/booking';
 import { guessCountry, toInternational } from '../../lib/countries';
+import { trackPixel } from '../../lib/pixel';
 import { Calendar } from './Calendar';
 import { PhoneField } from './PhoneField';
 import { TimeZoneSelect } from './TimeZoneSelect';
 
-type Step = 'qualify' | 'time' | 'details' | 'done';
+type Step = 'details' | 'time' | 'done';
 type SlotsStatus = 'idle' | 'loading' | 'ready' | 'error';
-type FormState = { name: string; email: string; phone: string; business: string; notes: string };
+type FormState = { name: string; email: string; phone: string };
 type Errors = Partial<Record<keyof FormState | 'budget' | 'budgetAmount' | 'site' | 'submit', string>>;
 /** What was actually sent, so the confirmation can't drift from the request. */
-type Booked = { start: Date; name: string; email: string; business: string; timeZone: string };
+type Booked = { start: Date; name: string; email: string; timeZone: string };
 
-const EMPTY: FormState = { name: '', email: '', phone: '', business: '', notes: '' };
-const STEP_INDEX: Record<Step, number> = { qualify: 0, time: 1, details: 2, done: 3 };
+const EMPTY: FormState = { name: '', email: '', phone: '' };
+const STEP_INDEX: Record<Step, number> = { details: 0, time: 1, done: 2 };
+/** Where to put the cursor for each step-1 problem, in the order they appear. */
+const FIELD_IDS = { budget: 'budget-0', budgetAmount: 'budget-amount', site: 'site', name: 'f-name', email: 'f-email', phone: 'f-phone' } as const;
 /** Free times older than this are re-checked in the background. */
 const SLOTS_MAX_AGE_MS = 2 * 60_000;
 const e = booking.errors;
 
 /**
- * The booking card: two qualifying questions, then a calendar of your free
- * times (from GoHighLevel when connected), then contact details.
+ * The booking card, in two steps: budget, website and how to reach them, then
+ * a calendar of your free times (from GoHighLevel when connected). Picking a
+ * time and confirming books the call.
  */
 export function BookingWidget() {
-  const [step, setStep] = useState<Step>('qualify');
+  const [step, setStep] = useState<Step>('details');
   const [budget, setBudget] = useState<BudgetId | null>(null);
   const [budgetAmount, setBudgetAmount] = useState('');
   const [site, setSite] = useState('');
   const [noSite, setNoSite] = useState(false);
+  const [form, setForm] = useState<FormState>(EMPTY);
+  const [country, setCountry] = useState('US');
   const [now, setNow] = useState(() => new Date());
   // Visitor's time zone: Eastern Time in the prerendered page, then their
   // device's own zone once the script runs (no permission needed).
@@ -61,16 +68,18 @@ export function BookingWidget() {
   const [month, setMonth] = useState<Date | null>(null);
   const [day, setDay] = useState<Date | null>(null);
   const [slot, setSlot] = useState<Date | null>(null);
-  const [form, setForm] = useState<FormState>(EMPTY);
-  const [country, setCountry] = useState('US');
   const [errors, setErrors] = useState<Errors>({});
   const [submitting, setSubmitting] = useState(false);
   const [booked, setBooked] = useState<Booked | null>(null);
 
   const card = useRef<HTMLDivElement>(null);
   const stepHeading = useRef<HTMLHeadingElement>(null);
-  const continueBtn = useRef<HTMLButtonElement>(null);
+  const confirmBtn = useRef<HTMLButtonElement>(null);
   const honeypot = useRef<HTMLInputElement>(null);
+  /** The spam trap's value, kept after step 1 (where the field lives) closes. */
+  const trapped = useRef('');
+  /** The pixel's Lead counts once per visit, even if they go back and change their details. */
+  const leadTracked = useRef(false);
   const prevStep = useRef(step);
   const slotsLoading = useRef<Promise<void> | null>(null);
   const slotsLoadedAt = useRef(0);
@@ -86,17 +95,18 @@ export function BookingWidget() {
     if (top < 0) card.current?.scrollIntoView({ block: 'start' });
   }, [step]);
 
-  // The page is prerendered, so a visitor on a slow phone can answer step 1
+  // The page is prerendered, so a visitor on a slow phone can fill in step 1
   // before the script loads, and browsers restore form fields on back/forward.
   // Take whatever is already in the fields as the starting state.
   useLayoutEffect(() => {
     const picked = document.querySelector<HTMLInputElement>('input[name="budget"]:checked');
     if (picked) setBudget(picked.value as BudgetId);
-    const amount = document.getElementById('budget-amount') as HTMLInputElement | null;
-    if (amount?.value) setBudgetAmount(amount.value);
-    const siteField = document.getElementById('site') as HTMLInputElement | null;
-    if (siteField?.value) setSite(siteField.value);
+    const typed = (id: string) => (document.getElementById(id) as HTMLInputElement | null)?.value ?? '';
+    if (typed('budget-amount')) setBudgetAmount(typed('budget-amount'));
+    if (typed('site')) setSite(typed('site'));
     if ((document.getElementById('no-site') as HTMLInputElement | null)?.checked) setNoSite(true);
+    const filled = { name: typed('f-name'), email: typed('f-email'), phone: typed('f-phone') };
+    if (filled.name || filled.email || filled.phone) setForm(filled);
     const detected = detectTimeZone();
     setTz(detected);
     setDeviceTz(detected);
@@ -141,10 +151,10 @@ export function BookingWidget() {
     };
   }, []);
 
-  // While they pick a time or fill in details, keep the clock moving (times drop
-  // off as GHL stops accepting them) and re-check GHL every couple of minutes.
+  // While they pick a time, keep the clock moving (times drop off as GHL stops
+  // accepting them) and re-check GHL every couple of minutes.
   useEffect(() => {
-    if (step !== 'time' && step !== 'details') return;
+    if (step !== 'time') return;
     const id = window.setInterval(() => {
       if (document.visibilityState !== 'visible') return;
       setNow(new Date());
@@ -165,9 +175,7 @@ export function BookingWidget() {
     if (slot && !isSlotOpen(slot, now)) {
       setSlot(null);
       // Say why the picked time went away, so it doesn't just vanish.
-      if (step === 'time' || step === 'details') setErrors({ submit: e.slotGone });
-      // The details step needs a slot: send the visitor back to pick another.
-      if (step === 'details') setStep('time');
+      if (step === 'time') setErrors({ submit: e.slotGone });
     }
     // Only re-check when the clock moves or new times arrive.
   }, [now, slotsTick, slotsStatus]);
@@ -177,23 +185,36 @@ export function BookingWidget() {
     setStep(s);
   };
 
-  function pickBudget(id: BudgetId) {
-    setBudget(id);
-    setErrors((x) => ({ ...x, budget: undefined }));
-    // They're about to book: start loading the free times now, so the calendar is ready.
+  /** Filling in step 1 means they're about to book: load the free times now, so the calendar is ready. */
+  function warmUp() {
     if (slotsStatus === 'idle') loadSlots();
   }
 
-  function onQualify(ev: FormEvent) {
+  function pickBudget(id: BudgetId) {
+    setBudget(id);
+    setErrors((x) => ({ ...x, budget: undefined }));
+    warmUp();
+  }
+
+  function onDetails(ev: FormEvent) {
     ev.preventDefault();
     const next: Errors = {};
     if (!budget) next.budget = e.budget;
     if (budget === 'under' && !/\d/.test(budgetAmount)) next.budgetAmount = e.budgetAmount;
     if (!noSite && !looksLikeUrl(site)) next.site = site.trim() ? e.siteInvalid : e.siteMissing;
+    if (!form.name.trim()) next.name = e.name;
+    if (!looksLikeEmail(form.email)) next.email = form.email.trim() ? e.emailInvalid : e.emailMissing;
+    if (!looksLikePhone(form.phone)) next.phone = form.phone.trim() ? e.phoneInvalid : e.phoneMissing;
     setErrors(next);
-    if (Object.keys(next).length) {
-      document.getElementById(next.budget ? 'budget-0' : next.budgetAmount ? 'budget-amount' : 'site')?.focus();
+    const first = (Object.keys(FIELD_IDS) as (keyof typeof FIELD_IDS)[]).find((k) => next[k]);
+    if (first) {
+      document.getElementById(FIELD_IDS[first])?.focus();
       return;
+    }
+    trapped.current = honeypot.current?.value ?? '';
+    if (!leadTracked.current) {
+      leadTracked.current = true;
+      trackPixel('Lead');
     }
     setNow(new Date());
     if (slotsStatus === 'idle' || slotsStatus === 'error') loadSlots();
@@ -202,39 +223,28 @@ export function BookingWidget() {
   }
 
   function pickSlot(s: Date) {
+    if (submitting) return;
     setSlot(s);
     if (errors.submit) setErrors((x) => ({ ...x, submit: undefined }));
-    // On phones the slot list is long; bring Continue up so the next step is obvious.
+    // On phones the slot list is long; bring the confirm button up so the last step is obvious.
     if (window.innerWidth < 768) {
-      requestAnimationFrame(() => continueBtn.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));
+      requestAnimationFrame(() => confirmBtn.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));
     }
   }
 
-  async function onSubmit(ev: FormEvent) {
-    ev.preventDefault();
-    if (submitting) return;
-    const next: Errors = {};
-    if (!form.name.trim()) next.name = e.name;
-    if (!looksLikeEmail(form.email)) next.email = form.email.trim() ? e.emailInvalid : e.emailMissing;
-    if (noSite && !form.business.trim()) next.business = e.business;
-    setErrors(next);
-    const first = (['name', 'email', 'business'] as const).find((k) => next[k]);
-    if (first) {
-      document.getElementById(`f-${first}`)?.focus();
-      return;
-    }
-    if (!slot || !budget) return;
+  async function book() {
+    if (submitting || !slot || !budget) return;
     // Re-check against the real current time (a tab can sit open until the
     // picked time is too soon to book or has passed).
     if (!isSlotOpen(slot, new Date())) {
       setSlot(null);
       setNow(new Date());
-      setStep('time');
       setErrors({ submit: e.slotGone });
       loadSlots({ fresh: true, background: true });
       return;
     }
-    const request = { start: slot, name: form.name.trim(), email: form.email.trim(), business: form.business.trim(), timeZone: tz };
+    const request = { start: slot, name: form.name.trim(), email: form.email.trim(), timeZone: tz };
+    setErrors({});
     setSubmitting(true);
     try {
       await submitBooking(
@@ -243,19 +253,18 @@ export function BookingWidget() {
           budgetAmount: budget === 'under' ? budgetAmount.trim() : '',
           website: noSite ? null : normaliseUrl(site),
           durationMin: CALL_MINUTES,
-          ...form,
           phone: toInternational(country, form.phone),
           ...request,
         },
-        honeypot.current?.value,
+        trapped.current,
       );
+      trackPixel('Schedule');
       setBooked(request);
       go('done');
     } catch (err) {
       if (err instanceof SlotTakenError) {
         // Someone else took it a moment ago: refresh the times and let them pick again.
         setSlot(null);
-        setStep('time');
         setErrors({ submit: e.slotTaken });
         loadSlots({ fresh: true, background: true });
       } else {
@@ -274,14 +283,15 @@ export function BookingWidget() {
     go('time');
   }
 
-  /** Back/Change are ignored while a booking is being sent. */
-  const backTo = (s: Step) => () => {
-    if (!submitting) go(s);
-  };
+  /** Back is ignored while a booking is being sent. */
+  function back() {
+    if (!submitting) go('details');
+  }
 
   const set = (k: keyof FormState) => (v: string) => {
     setForm((f) => ({ ...f, [k]: v }));
     if (errors[k]) setErrors((x) => ({ ...x, [k]: undefined }));
+    warmUp();
   };
 
   /** Show the same moments in another zone: keep the picked slot, move the calendar to its date there. */
@@ -306,7 +316,7 @@ export function BookingWidget() {
   ].filter((g) => g.slots.length);
 
   // Back sits under the main button on phones, beside it from 640px.
-  const actionRow = 'mt-8 flex flex-col-reverse items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between';
+  const actionRow = 'mt-6 flex flex-col-reverse items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between';
   const mainBtn = 'btn-cta w-full sm:w-auto';
   const backBtn = 'btn-ghost justify-center sm:justify-start';
 
@@ -330,10 +340,10 @@ export function BookingWidget() {
         </div>
 
         <div className="px-5 py-6 sm:px-7 sm:py-7">
-          {step === 'qualify' && (
-            <form key="qualify" onSubmit={onQualify} noValidate className="step-in">
+          {step === 'details' && (
+            <form key="details" onSubmit={onDetails} noValidate className="step-in">
               <h3 id="booking-focus" ref={stepHeading} tabIndex={-1} className="font-serif text-[1.85rem] leading-tight outline-none">
-                {booking.qualifyHeading}
+                {booking.detailsHeading}
               </h3>
 
               <fieldset className="mt-6" aria-describedby={errors.budget ? 'budget-err' : undefined}>
@@ -447,8 +457,36 @@ export function BookingWidget() {
                 </label>
               </div>
 
+              <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                <Field id="f-name" label={booking.fields.name} value={form.name} onValue={set('name')} error={errors.name} autoComplete="name" maxLength={120} required />
+                <Field
+                  id="f-email"
+                  label={booking.fields.email}
+                  value={form.email}
+                  onValue={set('email')}
+                  error={errors.email}
+                  type="email"
+                  inputMode="email"
+                  maxLength={200}
+                  autoComplete="email"
+                  autoCapitalize="off"
+                  spellCheck="false"
+                  required
+                />
+                <PhoneField className="sm:col-span-2" country={country} onCountry={setCountry} value={form.phone} onValue={set('phone')} error={errors.phone} />
+                {/* Spam trap: hidden from people and screen readers; bots fill it in. */}
+                <div aria-hidden className="absolute left-[-9999px] top-auto h-px w-px overflow-hidden">
+                  <label htmlFor="f-hp">Leave this empty</label>
+                  <input ref={honeypot} id="f-hp" name="hp_x7" type="text" tabIndex={-1} autoComplete="off" defaultValue="" />
+                </div>
+              </div>
+
+              <p className="mt-5 flex items-start gap-2 text-[13px] leading-relaxed text-stone">
+                <Lock size={13} className="mt-[3px] shrink-0" aria-hidden /> {booking.privacy}
+              </p>
+
               <div className="mt-6 flex items-center justify-between gap-4">
-                <p className="hidden text-[13px] text-stone sm:block">{booking.qualifyNote}</p>
+                <p className="hidden text-[13px] text-stone sm:block">{booking.detailsNote}</p>
                 <button type="submit" className={`${mainBtn} sm:ml-auto`}>
                   {booking.continue} <ArrowRight className="arrow" size={18} strokeWidth={2.4} aria-hidden />
                 </button>
@@ -461,7 +499,6 @@ export function BookingWidget() {
               <h3 id="booking-focus" ref={stepHeading} tabIndex={-1} className="font-serif text-[1.85rem] leading-tight outline-none">
                 {booking.timeHeading}
               </h3>
-              {errors.submit && <ErrorText id="time-err">{errors.submit}</ErrorText>}
               <div className="mt-5">
                 <TimeZoneSelect value={tz} deviceZone={deviceTz} onChange={changeTz} />
               </div>
@@ -500,6 +537,7 @@ export function BookingWidget() {
                     onMonth={setMonth}
                     selected={day}
                     onSelect={(d) => {
+                      if (submitting) return;
                       setDay(d);
                       setSlot(null);
                       if (errors.submit) setErrors((x) => ({ ...x, submit: undefined }));
@@ -538,87 +576,33 @@ export function BookingWidget() {
                 </div>
               )}
 
+              {/* The time they're about to confirm, so it's clear what the button books. */}
+              <div aria-live="polite">
+                {slot && (
+                  <p className="mt-7 flex items-center gap-3 rounded-2xl bg-cream/70 px-4 py-3 text-[14.5px] leading-snug">
+                    <CalendarDays size={19} className="shrink-0 text-ember-deep" aria-hidden />
+                    <span>
+                      <span className="font-semibold">{fmt.slotDay(slot, tz)}</span>
+                      {`, ${fmt.time(slot, tz)} ${zoneName(tz, slot)} · ${CALL_MINUTES} min`}
+                    </span>
+                  </p>
+                )}
+              </div>
+              {errors.submit && <ErrorText id="time-err">{errors.submit}</ErrorText>}
+
               <div className={actionRow}>
-                <button type="button" className={backBtn} onClick={() => go('qualify')}>
+                <button type="button" className={backBtn} onClick={back}>
                   <ArrowLeft size={16} aria-hidden /> {booking.back}
                 </button>
-                <button ref={continueBtn} type="button" className={mainBtn} disabled={!slot} onClick={() => go('details')}>
-                  {booking.continue} <ArrowRight className="arrow" size={18} strokeWidth={2.4} aria-hidden />
-                </button>
-              </div>
-            </div>
-          )}
-
-          {step === 'details' && slot && (
-            <form key="details" onSubmit={onSubmit} noValidate className="step-in">
-              <div className="flex items-center justify-between gap-3 rounded-2xl bg-cream/70 px-4 py-3">
-                <div className="flex min-w-0 items-center gap-3">
-                  <CalendarDays size={20} className="shrink-0 text-ember-deep" aria-hidden />
-                  <div className="min-w-0 leading-tight">
-                    <p className="truncate text-[15px] font-semibold">{fmt.slotDay(slot, tz)}</p>
-                    <p className="mt-0.5 truncate text-[13px] text-stone">{`${fmt.time(slot, tz)} ${zoneName(tz, slot)} · ${CALL_MINUTES} min`}</p>
-                  </div>
-                </div>
                 <button
+                  ref={confirmBtn}
                   type="button"
-                  onClick={backTo('time')}
-                  aria-label={booking.changeLabel}
-                  className="shrink-0 py-2 text-[14px] font-semibold underline decoration-ink/30 underline-offset-4 hover:decoration-ink"
+                  className={mainBtn}
+                  disabled={!slot}
+                  aria-disabled={submitting}
+                  aria-busy={submitting}
+                  onClick={book}
                 >
-                  {booking.change}
-                </button>
-              </div>
-
-              <h3 id="booking-focus" ref={stepHeading} tabIndex={-1} className="mt-6 font-serif text-[1.85rem] leading-tight outline-none">
-                {booking.detailsHeading}
-              </h3>
-
-              <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                <Field id="f-name" label={booking.fields.name} value={form.name} onValue={set('name')} error={errors.name} autoComplete="name" maxLength={120} required />
-                <Field
-                  id="f-email"
-                  label={booking.fields.email}
-                  value={form.email}
-                  onValue={set('email')}
-                  error={errors.email}
-                  type="email"
-                  inputMode="email"
-                  maxLength={200}
-                  autoComplete="email"
-                  autoCapitalize="off"
-                  spellCheck="false"
-                  required
-                />
-                <Field
-                  id="f-business"
-                  label={booking.fields.business}
-                  value={form.business}
-                  onValue={set('business')}
-                  error={errors.business}
-                  autoComplete="organization"
-                  maxLength={160}
-                  required={noSite}
-                />
-                <PhoneField country={country} onCountry={setCountry} value={form.phone} onValue={set('phone')} />
-                <TextArea id="f-notes" label={booking.fields.notes} value={form.notes} onValue={set('notes')} hint={booking.fields.notesHint} className="sm:col-span-2" rows={3} maxLength={1500} />
-                {/* Spam trap: hidden from people and screen readers; bots fill it in. */}
-                <div aria-hidden className="absolute left-[-9999px] top-auto h-px w-px overflow-hidden">
-                  <label htmlFor="f-hp">Leave this empty</label>
-                  <input ref={honeypot} id="f-hp" name="hp_x7" type="text" tabIndex={-1} autoComplete="off" defaultValue="" />
-                </div>
-              </div>
-
-              <p className="mt-5 flex items-start gap-2 text-[13px] leading-relaxed text-stone">
-                <Lock size={13} className="mt-[3px] shrink-0" aria-hidden /> {booking.privacy}
-              </p>
-
-              {errors.submit && <ErrorText id="submit-err">{errors.submit}</ErrorText>}
-
-              <div className={actionRow}>
-                <button type="button" className={backBtn} onClick={backTo('time')}>
-                  <ArrowLeft size={16} aria-hidden /> {booking.back}
-                </button>
-                <button type="submit" className={mainBtn} aria-disabled={submitting} aria-busy={submitting}>
                   {submitting ? (
                     <>
                       <LoaderCircle size={18} className="animate-[spin_0.8s_linear_infinite]" aria-hidden /> {booking.submitting}
@@ -630,7 +614,7 @@ export function BookingWidget() {
                   )}
                 </button>
               </div>
-            </form>
+            </div>
           )}
 
           {step === 'done' && booked && (
@@ -760,22 +744,6 @@ function Field({ id, label, value, onValue, error, hint, className, required, ..
         value={value}
         onChange={(ev) => onValue(ev.target.value)}
         aria-required={required || undefined}
-        aria-invalid={!!error}
-        aria-describedby={describedBy(id, error, hint)}
-        className="field"
-        {...rest}
-      />
-    </FieldShell>
-  );
-}
-
-function TextArea({ id, label, value, onValue, error, hint, className, ...rest }: FieldProps & Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'value' | 'onChange'>) {
-  return (
-    <FieldShell id={id} label={label} error={error} hint={hint} className={className}>
-      <textarea
-        id={id}
-        value={value}
-        onChange={(ev) => onValue(ev.target.value)}
         aria-invalid={!!error}
         aria-describedby={describedBy(id, error, hint)}
         className="field"

@@ -60,18 +60,19 @@ out in container units so the cursors land on their targets at any width.
 ## Booking → GoHighLevel + Google Sheet + WhatsApp
 
 Exactly like the studio site (see `../studio/README.md` for the one-time GHL
-and Google Sheet setup):
+and Google Sheet setup). The form has two steps: whether they have a website
+plus their name, email and phone, then a day and time. Confirming the time
+books the call:
 
 1. The time step loads your free times from the **same GHL calendar**
    (`api/slots.ts`), including its minimum notice.
 2. `api/book.ts` creates or updates the contact, books the appointment
    ("Booking system call: …"), adds one tag, **`booking-website`**
-   (`GHL_TAG` changes it), and a note with their answers.
+   (`GHL_TAG` changes it), and a note with their details.
 3. It also sends the booking to the **same Google Sheet script**, so you get
    the same WhatsApp alert. No change to the script is needed: the "Budget"
    column shows the plan and whether they need a new site or upkeep of
-   theirs, and "Notes" shows their business type, how fast they reply today,
-   their notes and the source ("Booking system website").
+   theirs, and "Notes" shows the source ("Booking system website").
 
 If GHL refuses a booking (other than the time being taken), the lead still
 reaches the sheet and WhatsApp, marked "⚠️ NOT in your GHL calendar" with

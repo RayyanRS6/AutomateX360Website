@@ -7,6 +7,8 @@ type Props = {
   onCountry: (iso: string) => void;
   value: string;
   onValue: (v: string) => void;
+  error?: string;
+  className?: string;
 };
 
 /**
@@ -14,13 +16,12 @@ type Props = {
  * <select> laid over a short "🇦🇪 +971" label, so phones open their own
  * scrollable list, and nothing heavy loads on the page.
  */
-export function PhoneField({ country, onCountry, value, onValue }: Props) {
+export function PhoneField({ country, onCountry, value, onValue, error, className }: Props) {
   const current = COUNTRIES.find((c) => c.iso === country) ?? COUNTRIES[0];
   return (
-    <div>
-      <label htmlFor="f-phone" className="mb-1.5 flex items-baseline justify-between gap-3 text-[14px] font-semibold">
+    <div className={className}>
+      <label htmlFor="f-phone" className="mb-1.5 block text-[14px] font-semibold">
         {booking.fields.phone}
-        <span className="text-[12px] font-normal text-stone">{booking.fields.optional}</span>
       </label>
       <div className="flex gap-2">
         {/* The select is invisible, so the wrapper shows its keyboard focus. */}
@@ -51,13 +52,21 @@ export function PhoneField({ country, onCountry, value, onValue }: Props) {
           maxLength={20}
           value={value}
           onChange={(e) => onValue(e.target.value)}
-          aria-describedby="f-phone-hint"
+          aria-required="true"
+          aria-invalid={!!error}
+          aria-describedby={error ? 'f-phone-err' : 'f-phone-hint'}
           className="field min-w-0 flex-1"
         />
       </div>
-      <p id="f-phone-hint" className="mt-1.5 text-[12.5px] text-stone">
-        {booking.fields.phoneHint}
-      </p>
+      {error ? (
+        <p id="f-phone-err" role="alert" className="mt-2 text-[13.5px] font-medium text-ember-deep">
+          {error}
+        </p>
+      ) : (
+        <p id="f-phone-hint" className="mt-1.5 text-[12.5px] text-stone">
+          {booking.fields.phoneHint}
+        </p>
+      )}
     </div>
   );
 }
