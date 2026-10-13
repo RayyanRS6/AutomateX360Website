@@ -14,7 +14,9 @@
 
 var WHATSAPP_API = 'https://api.whatsapp.com/agent/v1';
 
-// Time zone for the "Submitted" column. Use the same value as OWNER_TIMEZONE in Vercel.
+// Time zone for the "Submitted" column: Pakistan time (Islamabad). Asia/Karachi
+// is Pakistan's official zone ID and covers Islamabad. Keep in step with
+// OWNER_TIMEZONE in Vercel if you set it.
 var TIME_ZONE = 'Asia/Karachi';
 
 // One tab per website form. `keys` are the field names the website sends, in column order.

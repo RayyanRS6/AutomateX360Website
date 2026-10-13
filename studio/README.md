@@ -85,7 +85,8 @@ agent's API key lives in the sheet script's Script Properties.
 ### 0. Set up GoHighLevel (once)
 
 1. **Calendar:** in GHL, open the calendar visitors should book into. Set its
-   time zone to **Asia/Karachi**, its availability to your hours (**every day,
+   time zone to Pakistan time, listed in GHL as **Asia/Karachi** (it covers
+   Islamabad; GHL has no separate Islamabad entry), its availability to your hours (**every day,
    2 PM to 3 AM**), the slot length and interval (e.g. 30 minutes) and a
    minimum notice. These settings decide which times visitors see.
 2. **Private Integration token:** Settings → Private Integrations. Use a token
@@ -135,7 +136,7 @@ Project → Settings → Environment Variables (see `.env.example`):
 | `GHL_CALENDAR_ID` | The GHL calendar to book into |
 | `SHEET_WEBHOOK_URL` | The Web app URL from step 6 |
 | `SHEET_SECRET` | The same password as `SHARED_SECRET` |
-| `OWNER_TIMEZONE` | Optional. Defaults to `Asia/Karachi` (Islamabad), the zone your call times are shown in |
+| `OWNER_TIMEZONE` | Optional. Defaults to Pakistan time (Islamabad), the zone your call times are shown in. If set, use Pakistan's official ID `Asia/Karachi` |
 
 Then redeploy (environment variables apply to new deployments) and make a
 test booking.

@@ -3,8 +3,7 @@
 // Receives a booking from the page and checks it, then:
 //   1. GoHighLevel: creates or updates the contact, books the appointment on
 //      your calendar (GHL refuses times that were taken meanwhile), adds the
-//      tag "booking-website" (GHL_TAG overrides it) and a note with the lead's
-//      details.
+//      tag "autopilot-website" and a note with the lead's details.
 //   2. Google Sheet: forwards the booking to the sheet script
 //      (google-apps-script/Code.gs), which saves a row and sends you WhatsApp.
 //      Same sheet and columns as the studio site: the "Budget" column gets the
@@ -35,8 +34,10 @@ const GHL_BASE = 'https://services.leadconnectorhq.com';
 // GHL's API version for each part of its API.
 const GHL_VERSIONS = { contacts: '2021-07-28', calendars: '2021-04-15' };
 const GHL_TIMEOUT_MS = 10_000;
-const DEFAULT_GHL_TAG = 'booking-website';
-// The owner is in Islamabad, Pakistan. OWNER_TIMEZONE in Vercel can override it.
+const GHL_TAG = 'autopilot-website';
+// The owner's clock: Pakistan time (Islamabad, PKT, UTC+5). Asia/Karachi is
+// Pakistan's one official zone ID and covers Islamabad (there is no
+// Asia/Islamabad). OWNER_TIMEZONE in Vercel can override it.
 const DEFAULT_OWNER_TIME_ZONE = 'Asia/Karachi';
 
 type Lead = {
@@ -209,7 +210,7 @@ async function bookInGhl(cfg: GhlConfig, lead: Lead, description: string): Promi
 /** Adds the single tag and a note with the lead's details. Failures are logged only. */
 async function finishInGhl(cfg: GhlConfig, contactId: string, note: string) {
   const [tag, noteRes] = await Promise.all([
-    ghlPost(cfg, `/contacts/${encodeURIComponent(contactId)}/tags`, { tags: [process.env.GHL_TAG?.trim() || DEFAULT_GHL_TAG] }),
+    ghlPost(cfg, `/contacts/${encodeURIComponent(contactId)}/tags`, { tags: [GHL_TAG] }),
     ghlPost(cfg, `/contacts/${encodeURIComponent(contactId)}/notes`, { body: note }),
   ]);
   if (!tag.ok) console.error(`GHL tag failed (${tag.status}): ${ghlMessage(tag.data)}`);

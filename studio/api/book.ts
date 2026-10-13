@@ -31,7 +31,9 @@ const GHL_BASE = 'https://services.leadconnectorhq.com';
 const GHL_VERSIONS = { contacts: '2021-07-28', calendars: '2021-04-15' };
 const GHL_TIMEOUT_MS = 10_000;
 const GHL_TAG = 'studio-website';
-// The owner is in Islamabad, Pakistan. OWNER_TIMEZONE in Vercel can override it.
+// The owner's clock: Pakistan time (Islamabad, PKT, UTC+5). Asia/Karachi is
+// Pakistan's one official zone ID and covers Islamabad (there is no
+// Asia/Islamabad). OWNER_TIMEZONE in Vercel can override it.
 const DEFAULT_OWNER_TIME_ZONE = 'Asia/Karachi';
 
 type Lead = {

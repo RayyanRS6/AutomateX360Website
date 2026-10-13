@@ -67,8 +67,8 @@ books the call:
 1. The time step loads your free times from the **same GHL calendar**
    (`api/slots.ts`), including its minimum notice.
 2. `api/book.ts` creates or updates the contact, books the appointment
-   ("Booking system call: …"), adds one tag, **`booking-website`**
-   (`GHL_TAG` changes it), and a note with their details.
+   ("Booking system call: …"), adds one tag, **`autopilot-website`** (the
+   studio site adds `studio-website`), and a note with their details.
 3. It also sends the booking to the **same Google Sheet script**, so you get
    the same WhatsApp alert. No change to the script is needed: the "Budget"
    column shows the plan and whether they need a new site or upkeep of
@@ -87,8 +87,8 @@ GHL's own error.
    `autopilot/vercel.json`.
 3. **Settings → Environment Variables**: the same values as the studio project
    (`GHL_TOKEN`, `GHL_LOCATION_ID`, `GHL_CALENDAR_ID`, `SHEET_WEBHOOK_URL`,
-   `SHEET_SECRET`), plus optional `GHL_TAG` and `OWNER_TIMEZONE`. See
-   `.env.example`. Then redeploy.
+   `SHEET_SECRET`), plus optional `OWNER_TIMEZONE`. See `.env.example`, or
+   import the shared `.env` at the repo root. Then redeploy.
 4. **Settings → Domains**: add the subdomain `autopilot.automatex360.com`
    and create the CNAME record Vercel shows at your DNS provider.
 5. Make one test booking and check GHL, the sheet and WhatsApp.
