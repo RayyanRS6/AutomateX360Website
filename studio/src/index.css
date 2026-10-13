@@ -1,7 +1,4 @@
 @import 'tailwindcss';
-/* The booking-system site lives in booking/ in the same repo, with its own
-   styles: keep its class names out of this site's stylesheet. */
-@source not '../booking';
 
 /* ── Tokens ────────────────────────────────────────────────────────────────
    Palette and type are lifted from the ad creative so the click-through

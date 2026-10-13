@@ -1,20 +1,17 @@
+# Shared by both sites; each folder also has its own .gitignore.
 node_modules
 dist
 dist-ssr
 .cache
 *.log
+.vercel
 
 # Secrets: real values live in Vercel's environment variables only.
 .env
 .env.*
 !.env.example
-.vercel
 
-# Local design references and tooling (not part of the site).
+# Local tools and design references (not part of the sites).
+.claude/
 design i like/
 my ads/
-.claude/
-
-# Compiled output of the TypeScript function (Vercel builds it itself).
-api/*.js
-api/*.js.map

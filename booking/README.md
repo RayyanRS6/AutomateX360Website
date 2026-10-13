@@ -12,8 +12,8 @@ about a third of React's JavaScript. The production build is prerendered to
 static HTML, so the page shows before any JavaScript loads.
 
 This site lives in the `booking/` folder of the same repo as the studio site
-(which is at the repo root). Each is its own Vercel project: same repo,
-different **Root Directory**.
+(`../studio`). Each is its own Vercel project: same repo, different **Root
+Directory** (`booking` here, `studio` there).
 
 ## Run it
 
