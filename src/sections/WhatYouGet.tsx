@@ -1,6 +1,6 @@
 import { Check, Plus } from 'lucide-react';
 import { value } from '../content';
-import { Eyebrow, SplitHeading, vars } from '../components/ui';
+import { Eyebrow, SplitHeading, swingProps, vars } from '../components/ui';
 
 export function WhatYouGet() {
   const [custom, hosting, plugins, scale, own] = value.items;
@@ -107,7 +107,7 @@ function PriceTags() {
         <em>{value.tags.caption.em}</em>
       </p>
       <div className="mt-9 grid grid-cols-2 items-start gap-3 sm:gap-6">
-        <div className="loop swing" style={vars({ '--r0': '-6deg', '--r1': '-3.5deg', '--origin': '50% 10%', '--dur': '6.5s' })}>
+        <div className="loop swing" style={vars({ '--r0': '-6deg', '--r1': '-3.5deg', '--origin': '50% 10%', '--dur': '6.5s' })} {...swingProps}>
           <div className="relative rounded-[18px] bg-[#cfcac2] px-3 pb-7 pt-12 text-center text-ink shadow-[0_30px_50px_-24px_rgb(0_0_0/0.8)] sm:px-5 sm:pt-14">
             <span className="absolute left-1/2 top-4 size-[18px] -translate-x-1/2 rounded-full bg-ink sm:size-5" />
             <p className="relative inline-block font-serif text-[clamp(2.7rem,9vw,4rem)] leading-none text-ink/75">
@@ -123,7 +123,7 @@ function PriceTags() {
             </p>
           </div>
         </div>
-        <div className="loop swing mt-5" style={vars({ '--r0': '4deg', '--r1': '1.5deg', '--origin': '50% 10%', '--dur': '7.5s' })}>
+        <div className="loop swing mt-5" style={vars({ '--r0': '4deg', '--r1': '1.5deg', '--origin': '50% 10%', '--dur': '7.5s' })} {...swingProps}>
           <div className="relative rounded-[18px] bg-ember px-3 pb-7 pt-12 text-center text-ink shadow-[0_30px_60px_-24px_rgb(240_68_30/0.55)] sm:px-5 sm:pt-14">
             <span className="absolute left-1/2 top-4 size-[18px] -translate-x-1/2 rounded-full bg-ink sm:size-5" />
             <p className="font-serif text-[clamp(2.7rem,9vw,4rem)] leading-none">{value.tags.ours.price}</p>

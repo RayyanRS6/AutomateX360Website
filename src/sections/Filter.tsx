@@ -1,6 +1,6 @@
 import { Check, X } from 'lucide-react';
 import { filter } from '../content';
-import { Eyebrow, SplitHeading, vars } from '../components/ui';
+import { Eyebrow, SplitHeading, swingProps, vars } from '../components/ui';
 
 export function Filter() {
   return (
@@ -60,6 +60,7 @@ function ClosedSign() {
     <div
       className="loop swing relative mx-auto w-full max-w-[470px] pt-[58px] lg:mx-0"
       style={vars({ '--r0': '-4deg', '--r1': '-1.5deg', '--origin': '50% 8px', '--dur': '7.5s' })}
+      {...swingProps}
       role="img"
       aria-label={`${filter.sign.top} ${filter.sign.word} ${filter.sign.bottom}`}
     >

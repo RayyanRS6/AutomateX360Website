@@ -1,5 +1,5 @@
 import { brand, cta, finalCta, footer, hero } from '../content';
-import { CtaLink, SplitHeading, vars } from '../components/ui';
+import { CtaLink, SplitHeading, swingProps, vars } from '../components/ui';
 
 export function FinalCta() {
   return (
@@ -39,7 +39,7 @@ function DoorHanger() {
   const h = finalCta.hanger;
   return (
     <div className="reveal" style={vars({ '--d': '100ms' })}>
-      <div className="loop swing" style={vars({ '--r0': '-6deg', '--r1': '-3deg', '--origin': '50% 70px', '--dur': '6.5s' })}>
+      <div className="loop swing" style={vars({ '--r0': '-6deg', '--r1': '-3deg', '--origin': '50% 70px', '--dur': '6.5s' })} {...swingProps}>
         <div
           className="paper-card relative w-[min(78vw,340px)] rounded-[30px] px-8 pb-9 pt-8 text-center"
           role="img"

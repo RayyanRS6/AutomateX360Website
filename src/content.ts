@@ -69,6 +69,10 @@ export const hero = {
   ctaNote: { before: 'For website budgets of', strong: config.minBudget, after: 'and up.' },
   // The four promises from the ads, shown as a ruled row like the ad layout.
   promises: ['Custom-made website', 'No hosting fees, for life', 'No plugin fees, for life', 'Built to scale'],
+  // Cursors working on the hero homepage, like a shared design file: the
+  // designer selects the headline, then you leave a comment. (The selection
+  // box in index.css, .hc-select, is measured for the Nexus headline.)
+  collab: { designer: 'Designer', you: 'You', youInitial: 'Y', comment: 'Love it' },
   // Floating chips over the hero visual. They describe the offer, not events.
   chips: {
     mockup: { title: 'Your homepage', status: 'Before you pay', badge: 'Free' },

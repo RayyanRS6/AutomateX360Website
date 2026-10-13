@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { CalendarCheck2, Check } from 'lucide-react';
 import { cta, hero, heroWork, work } from '../content';
 import { initPointerDepth } from '../lib/motion';
-import { BrowserFrame, CtaLink, PhoneFrame, PriceTag, vars, workSrc, workSrcSet } from '../components/ui';
+import { AgentCursor, BrowserFrame, CtaLink, PhoneFrame, PriceTag, vars, workSrc, workSrcSet } from '../components/ui';
 
 // Shared with the <head> preload (entry-server.tsx); they must match exactly
 // or the browser downloads the hero image twice.
@@ -76,17 +76,33 @@ function HeroStage() {
           <div data-depth="0.7" className="enter-rise" style={vars({ '--d': '100ms' })}>
             <div className="hero-tilt">
               <BrowserFrame url={w.domain ?? w.name}>
-                <img
-                  src={workSrc(w.slug, 'fold', 1200)}
-                  srcSet={workSrcSet(w.slug, 'fold', HERO_FOLD_WIDTHS)}
-                  sizes={HERO_FOLD_SIZES}
-                  width={1600}
-                  height={1000}
-                  alt={`${w.name} homepage on desktop`}
-                  fetchPriority="high"
-                  decoding="async"
-                  className="block aspect-[16/10] w-full bg-sand object-cover object-top"
-                />
+                {/* A designer and you at work on the homepage (decorative; see .hc in index.css). */}
+                <div className="hc loop relative">
+                  <img
+                    src={workSrc(w.slug, 'fold', 1200)}
+                    srcSet={workSrcSet(w.slug, 'fold', HERO_FOLD_WIDTHS)}
+                    sizes={HERO_FOLD_SIZES}
+                    width={1600}
+                    height={1000}
+                    alt={`${w.name} homepage on desktop`}
+                    fetchPriority="high"
+                    decoding="async"
+                    className="block aspect-[16/10] w-full bg-sand object-cover object-top"
+                  />
+                  <span aria-hidden className="hc-select">
+                    <i />
+                    <i />
+                    <i />
+                    <i />
+                  </span>
+                  <span aria-hidden className="hc-comment">
+                    <span className="hc-avatar">{hero.collab.youInitial}</span>
+                    {hero.collab.comment}
+                    <Check strokeWidth={3} />
+                  </span>
+                  <AgentCursor name={hero.collab.designer} tone="ink" className="hc-cur-designer" flip />
+                  <AgentCursor name={hero.collab.you} className="hc-cur-you" click flip />
+                </div>
               </BrowserFrame>
             </div>
           </div>

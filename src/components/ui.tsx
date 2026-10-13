@@ -67,6 +67,50 @@ export function SplitHeading({
   );
 }
 
+/**
+ * A collaborator's cursor with its name tag, like in a shared design file.
+ * Decorative: position it absolutely and move it with keyframes (transform
+ * only). Its box is the arrow, so its top-left corner is the pointer tip.
+ */
+export function AgentCursor({
+  name,
+  tone = 'ember',
+  className = '',
+  click = false,
+  flip = false,
+}: {
+  name: string;
+  tone?: 'ember' | 'ink';
+  className?: string;
+  /** Adds the ring a scene can pulse when the cursor "clicks". */
+  click?: boolean;
+  /** Name tag on the left of the pointer, for paths near a right edge. */
+  flip?: boolean;
+}) {
+  return (
+    <span aria-hidden className={`agent-cursor tone-${tone} ${flip ? 'flip' : ''} ${className}`}>
+      {click && <span className="agent-click" />}
+      <svg viewBox="0 0 20 22" className="agent-cursor-arrow">
+        <path d="M2.2 1.6 17.6 11.3l-6.9 1.5-3.3 7.1z" />
+      </svg>
+      <span className="agent-cursor-label">{name}</span>
+    </span>
+  );
+}
+
+const pushSwing = (e: { currentTarget: HTMLElement }) => {
+  const el = e.currentTarget;
+  if (!el.classList.contains('nudge')) el.classList.add('nudge');
+};
+/** Spread onto a `.swing` element: hovering or tapping gives the hanging prop a push. */
+export const swingProps = {
+  onPointerEnter: pushSwing,
+  onClick: pushSwing,
+  onAnimationEnd: (e: { currentTarget: HTMLElement; animationName: string }) => {
+    if (e.animationName === 'nudge-swing') e.currentTarget.classList.remove('nudge');
+  },
+};
+
 /** Black tag with the struck-through price, sized by the surrounding font. */
 export function PriceTag({ price }: { price: string }) {
   return (

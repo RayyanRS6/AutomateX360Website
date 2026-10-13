@@ -450,8 +450,9 @@
   }
 }
 
-/* Gentle swing for hanging props. Runs a few times when it comes on screen
-   (.playing is toggled by an observer), then settles; never on lite devices. */
+/* Gentle sway for hanging props while they're on screen (.playing is toggled
+   by an observer); hovering or tapping one gives it a push (.nudge, see
+   swingProps in ui.tsx). Never on lite devices or with reduced motion. */
 @keyframes swing {
   0%,
   100% {
@@ -461,13 +462,320 @@
     transform: rotate(var(--r1, 1.5deg));
   }
 }
+@keyframes nudge-swing {
+  0%,
+  100% {
+    transform: rotate(var(--r0, -3deg));
+  }
+  18% {
+    transform: rotate(calc(var(--r0, -3deg) + 8deg));
+  }
+  38% {
+    transform: rotate(calc(var(--r0, -3deg) - 5.5deg));
+  }
+  58% {
+    transform: rotate(calc(var(--r0, -3deg) + 3deg));
+  }
+  78% {
+    transform: rotate(calc(var(--r0, -3deg) - 1.2deg));
+  }
+}
 .swing {
   transform: rotate(var(--r0, -3deg));
   transform-origin: var(--origin, 50% 0);
 }
 @media (prefers-reduced-motion: no-preference) {
   html:not(.lite) .swing.playing {
-    animation: swing var(--dur, 7s) ease-in-out 3;
+    animation: swing var(--dur, 7s) ease-in-out infinite;
+  }
+  html:not(.lite) .swing.nudge,
+  html:not(.lite) .swing.playing.nudge {
+    animation: nudge-swing 1.5s var(--ease-soft) 1;
+  }
+}
+
+/* ── Collaborator cursors ──
+   The element's box is the arrow, so a scene's translate() puts the pointer
+   tip exactly on its target. The name tag hangs below-right, or below-left
+   with .flip. */
+.agent-cursor {
+  --c: var(--color-ember);
+  --on: var(--color-ink);
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 6;
+  width: 19px;
+  height: 21px;
+  pointer-events: none;
+  user-select: none;
+}
+.agent-cursor.tone-ink {
+  --c: var(--color-ink);
+  --on: var(--color-cream);
+}
+.agent-cursor-arrow {
+  width: 19px;
+  height: 21px;
+  fill: var(--c);
+  stroke: #fff;
+  stroke-width: 1.7;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 2px 3px rgb(17 17 17 / 0.28));
+}
+.agent-cursor-label {
+  position: absolute;
+  left: 13px;
+  top: 17px;
+  padding: 3px 9px 4px;
+  border-radius: 999px 999px 999px 4px;
+  background: var(--c);
+  color: var(--on);
+  font-size: 11.5px;
+  font-weight: 650;
+  line-height: 1.25;
+  white-space: nowrap;
+  box-shadow: 0 6px 14px -6px rgb(17 17 17 / 0.45);
+}
+.agent-cursor.flip .agent-cursor-label {
+  left: auto;
+  right: 9px;
+  border-radius: 999px 4px 999px 999px;
+}
+.agent-click {
+  position: absolute;
+  left: -9px;
+  top: -9px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--c);
+  opacity: 0;
+}
+
+/* ── Hero: a designer and you, working on the homepage ──
+   Placed in container units of the screenshot (100 wide × 62.5 tall), so the
+   paths land on the same spots at every size. The resting styles are the
+   finished scene (no selection, your comment showing); the 11s cycle only
+   runs while the hero is on screen, never on lite devices or with reduced
+   motion. */
+.hc {
+  container-type: inline-size;
+  /* On phones the frosted "Your homepage" chip sits lower over the frame, so
+     the comment and your cursor move up a little. */
+  --hc-dy: 0cqw;
+}
+@media (width < 640px) {
+  .hc {
+    --hc-dy: -4.5cqw;
+  }
+}
+.hc-select {
+  position: absolute;
+  left: 17.5cqw;
+  top: 11.2cqw;
+  width: 65cqw;
+  height: 7.2cqw;
+  border: 1.5px solid var(--color-ember);
+  opacity: 0;
+  transform-origin: 0 0;
+  pointer-events: none;
+}
+.hc-select i {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  background: #fff;
+  border: 1.5px solid var(--color-ember);
+}
+.hc-select i:nth-child(1) {
+  left: -4px;
+  top: -4px;
+}
+.hc-select i:nth-child(2) {
+  right: -4px;
+  top: -4px;
+}
+.hc-select i:nth-child(3) {
+  left: -4px;
+  bottom: -4px;
+}
+.hc-select i:nth-child(4) {
+  right: -4px;
+  bottom: -4px;
+}
+/* Left of the frosted "Your homepage" chip, which covers the right side. */
+.hc-comment {
+  position: absolute;
+  left: 37cqw;
+  top: calc(41cqw + var(--hc-dy));
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 4px;
+  border-radius: 999px 999px 999px 4px;
+  background: #fff;
+  color: var(--color-ink);
+  font-size: clamp(11px, 2.2cqw, 13px);
+  font-weight: 650;
+  white-space: nowrap;
+  box-shadow:
+    0 0 0 1px rgb(17 17 17 / 0.06),
+    0 12px 24px -12px rgb(17 17 17 / 0.5);
+}
+.hc-avatar {
+  display: grid;
+  place-items: center;
+  width: 1.9em;
+  height: 1.9em;
+  border-radius: 50%;
+  background: var(--color-ember);
+  font-size: 0.82em;
+  font-weight: 700;
+}
+.hc-comment svg {
+  width: 1.05em;
+  height: 1.05em;
+  color: var(--color-go);
+}
+.hc-cur-designer {
+  transform: translate(86cqw, 22cqw);
+}
+.hc-cur-you {
+  transform: translate(53cqw, calc(50cqw + var(--hc-dy)));
+}
+@media (prefers-reduced-motion: no-preference) {
+  html:not(.lite) .hc.playing :is(.hc-select, .hc-comment, .hc-cur-designer, .hc-cur-you, .agent-click) {
+    animation-duration: 11s;
+    animation-iteration-count: infinite;
+    animation-timing-function: var(--ease-soft);
+  }
+  html:not(.lite) .hc.playing .hc-select {
+    animation-name: hc-select;
+  }
+  html:not(.lite) .hc.playing .hc-comment {
+    animation-name: hc-comment;
+  }
+  html:not(.lite) .hc.playing .hc-cur-designer {
+    animation-name: hc-designer;
+  }
+  html:not(.lite) .hc.playing .hc-cur-you {
+    animation-name: hc-you;
+  }
+  html:not(.lite) .hc.playing .hc-cur-you .agent-click {
+    animation-name: hc-click;
+    animation-timing-function: ease-out;
+  }
+  /* The designer's name tag sits left of the pointer (.flip), and swaps to the
+     right while the pointer is at the headline's left edge. */
+  html:not(.lite) .hc.playing .hc-cur-designer .agent-cursor-label {
+    animation: hc-designer-tag 11s var(--ease-soft) infinite;
+  }
+}
+@keyframes hc-designer-tag {
+  0%,
+  6%,
+  22%,
+  100% {
+    transform: none;
+  }
+  11%,
+  17% {
+    transform: translateX(calc(100% + 22px));
+  }
+}
+/* The designer drags a selection around the headline, nudges its corner, lets go. */
+@keyframes hc-designer {
+  0%,
+  4%,
+  52%,
+  100% {
+    transform: translate(86cqw, 22cqw);
+  }
+  14% {
+    transform: translate(17.5cqw, 11.2cqw);
+  }
+  26%,
+  30% {
+    transform: translate(82.5cqw, 18.4cqw);
+  }
+  36%,
+  44% {
+    transform: translate(85cqw, 19.4cqw);
+  }
+}
+@keyframes hc-select {
+  0%,
+  14% {
+    opacity: 0;
+    transform: scale(0.02, 0.1);
+  }
+  15% {
+    opacity: 1;
+    transform: scale(0.02, 0.1);
+  }
+  26%,
+  30% {
+    opacity: 1;
+    transform: none;
+  }
+  36%,
+  44% {
+    opacity: 1;
+    transform: scale(1.038, 1.14);
+  }
+  50%,
+  100% {
+    opacity: 0;
+    transform: scale(1.038, 1.14);
+  }
+}
+/* Then you drop by and leave a comment. */
+@keyframes hc-you {
+  0%,
+  52% {
+    transform: translate(53cqw, calc(50cqw + var(--hc-dy)));
+  }
+  60%,
+  63% {
+    transform: translate(38.5cqw, calc(44cqw + var(--hc-dy)));
+  }
+  70%,
+  100% {
+    transform: translate(53cqw, calc(50cqw + var(--hc-dy)));
+  }
+}
+@keyframes hc-click {
+  0%,
+  61.5% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  62% {
+    opacity: 0.9;
+    transform: scale(0.3);
+  }
+  66%,
+  100% {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}
+@keyframes hc-comment {
+  0%,
+  62% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.85);
+  }
+  65%,
+  95% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: none;
   }
 }
 
