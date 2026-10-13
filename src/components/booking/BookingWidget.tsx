@@ -293,6 +293,7 @@ export function BookingWidget() {
                     autoCapitalize="off"
                     spellCheck="false"
                     placeholder={booking.sitePlaceholder}
+                    maxLength={200}
                     value={site}
                     disabled={noSite}
                     aria-required={!noSite}
@@ -432,7 +433,7 @@ export function BookingWidget() {
               </h3>
 
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                <Field id="f-name" label={booking.fields.name} value={form.name} onValue={set('name')} error={errors.name} autoComplete="name" required />
+                <Field id="f-name" label={booking.fields.name} value={form.name} onValue={set('name')} error={errors.name} autoComplete="name" maxLength={120} required />
                 <Field
                   id="f-email"
                   label={booking.fields.email}
@@ -441,6 +442,7 @@ export function BookingWidget() {
                   error={errors.email}
                   type="email"
                   inputMode="email"
+                  maxLength={200}
                   autoComplete="email"
                   autoCapitalize="off"
                   spellCheck="false"
@@ -453,14 +455,15 @@ export function BookingWidget() {
                   onValue={set('business')}
                   error={errors.business}
                   autoComplete="organization"
+                  maxLength={160}
                   required={noSite}
                 />
-                <Field id="f-phone" label={booking.fields.phone} value={form.phone} onValue={set('phone')} hint={booking.fields.phoneHint} type="tel" inputMode="tel" autoComplete="tel" />
-                <TextArea id="f-notes" label={booking.fields.notes} value={form.notes} onValue={set('notes')} hint={booking.fields.notesHint} className="sm:col-span-2" rows={3} />
+                <Field id="f-phone" label={booking.fields.phone} value={form.phone} onValue={set('phone')} hint={booking.fields.phoneHint} type="tel" inputMode="tel" autoComplete="tel" maxLength={40} />
+                <TextArea id="f-notes" label={booking.fields.notes} value={form.notes} onValue={set('notes')} hint={booking.fields.notesHint} className="sm:col-span-2" rows={3} maxLength={1500} />
                 {/* Spam trap: hidden from people and screen readers; bots fill it in. */}
                 <div aria-hidden className="absolute left-[-9999px] top-auto h-px w-px overflow-hidden">
-                  <label htmlFor="f-company">Company</label>
-                  <input ref={honeypot} id="f-company" name="company" type="text" tabIndex={-1} autoComplete="off" defaultValue="" />
+                  <label htmlFor="f-hp">Leave this empty</label>
+                  <input ref={honeypot} id="f-hp" name="hp_x7" type="text" tabIndex={-1} autoComplete="off" defaultValue="" />
                 </div>
               </div>
 

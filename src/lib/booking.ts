@@ -211,7 +211,8 @@ export function downloadIcs(ics: string, filename: string) {
 
 /**
  * Sends the booking to the site's own server function (api/book.ts), which
- * forwards the lead to WhatsApp. The WhatsApp token lives only on the server.
+ * saves it to the Google Sheet and sends it to WhatsApp. No secrets live in
+ * the browser: they're in Vercel and in the sheet's script.
  * `honeypot` is a hidden field people never see; bots fill it in.
  *
  * Throws on failure, so the form shows its error message and the visitor can
@@ -221,7 +222,7 @@ export async function submitBooking(req: BookingRequest, honeypot = ''): Promise
   const res = await fetch('/api/book', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...req, start: req.start.toISOString(), company: honeypot }),
+    body: JSON.stringify({ ...req, start: req.start.toISOString(), hp: honeypot }),
   });
   // `npm run dev` has no server functions; use `vercel dev` to test the real
   // send. Plain Vite dev lets the flow finish so the UI can still be worked on.

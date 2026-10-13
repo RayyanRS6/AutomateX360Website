@@ -49,62 +49,68 @@ Items marked `TODO` need your real answer before ads go live:
    sizes from the last screenshots, without opening a browser.
 3. `heroWork` in `src/content.ts` picks which site is shown large in the hero.
 
-## Booking → WhatsApp
+## Booking → Google Sheet → WhatsApp
 
 When someone confirms a call, the page posts the booking to `api/book.ts`, a
-Vercel serverless function. The function checks the booking and sends the
-lead to your WhatsApp through the WhatsApp Cloud API (Meta). The access token
-lives only in Vercel's environment variables: it is never in the browser code
-or in this repo.
+Vercel serverless function. The function checks the booking and forwards it,
+with a shared password, to a Google Sheet script
+(`google-apps-script/Code.gs`). The script saves the booking as a row in the
+sheet and sends it to your WhatsApp through the WhatsApp agent.
+
+Nothing secret is in the browser or this repo: the script's URL and the
+shared password live in Vercel's environment variables, and the WhatsApp
+agent's API key lives in the script's Script Properties.
 
 Anyone who picks "Under $2,000" sees a polite "not a fit" message and never
 reaches the calendar (the function also rejects under-budget bookings). A
 hidden spam-trap field quietly drops bot submissions.
 
-### Set it up in Vercel
+### 1. Set up the Google Sheet (once)
 
-In Vercel: Project → Settings → Environment Variables, add (see `.env.example`):
+1. Create a Google Sheet. From inside it, open **Extensions → Apps Script**
+   (this attaches the script to the sheet).
+2. Replace everything in `Code.gs` with `google-apps-script/Code.gs` from this
+   repo, and save (Ctrl+S). If you're not in Pakistan, change `TIME_ZONE` at
+   the top to your zone (the same value as `OWNER_TIMEZONE` in Vercel).
+3. **Project Settings** (gear icon) → **Script Properties** → add:
+   - `SHARED_SECRET`: a long random password (you'll put the same value in Vercel).
+   - `WHATSAPP_API_KEY`: your WhatsApp agent's API key.
+   - `SHEET_ID`: only if you created the script outside the sheet (e.g. on
+     script.google.com): paste your sheet's link. Not needed when you used
+     Extensions → Apps Script.
+4. In the editor, pick `setup` in the function menu and click **Run**. Google
+   warns "Google hasn't verified this app" because it's your own private
+   script: click **Advanced → Go to (project name) (unsafe)**, tick
+   **Select all**, then **Continue**. This creates the **Bookings** tab.
+5. Send your WhatsApp agent any message from your phone, then run
+   `connectWhatsApp`. You get "✅ Connected!" on WhatsApp when it works.
+6. **Deploy → New deployment →** gear icon **→ Web app**. Execute as: **Me**.
+   Who has access: **Anyone** (not "Anyone with Google account"). Click
+   **Deploy** and copy the Web app URL (ends in `/exec`).
+7. Open that URL in a **private/incognito window**. It should list: Sheet
+   connected, Password set, WhatsApp connected. A Google sign-in page there
+   means "Who has access" isn't "Anyone".
+
+After editing the script later, publish the change with Deploy → Manage
+deployments → Edit → Version: **New version** (the URL stays the same).
+
+### 2. Set up Vercel
+
+Project → Settings → Environment Variables (see `.env.example`):
 
 | Variable | Value |
 | --- | --- |
-| `WHATSAPP_TOKEN` | WhatsApp Cloud API access token |
-| `WHATSAPP_PHONE_NUMBER_ID` | Meta App → WhatsApp → API Setup → "Phone number ID" of the sending number |
-| `WHATSAPP_NOTIFY_TO` | Your WhatsApp number(s), country code, digits only, comma-separated |
-| `WHATSAPP_TEMPLATE` | Optional but recommended: approved template name (below) |
-| `WHATSAPP_TEMPLATE_LANG` | Template language code, e.g. `en` or `en_US` |
-| `OWNER_TIMEZONE` | Your time zone, e.g. `Asia/Karachi`, so alerts show your local time |
+| `SHEET_WEBHOOK_URL` | The Web app URL from step 6 |
+| `SHEET_SECRET` | The same password as `SHARED_SECRET` |
+| `OWNER_TIMEZONE` | Your time zone, e.g. `Asia/Karachi`, so the call time is shown in yours |
 
-Then redeploy (environment variables apply to new deployments).
+Then redeploy (environment variables apply to new deployments) and make a
+test booking.
 
-Things WhatsApp requires:
-
-- **Token:** the token on Meta's API Setup page expires after 24 hours. For
-  the live site, create a permanent token (Business Settings → System Users →
-  generate token with `whatsapp_business_messaging`).
-- **Test number:** while using Meta's free test number, add your own number as
-  a recipient on the API Setup page, or messages are refused.
-- **Template:** WhatsApp only delivers free-form text if you've messaged the
-  business number in the last 24 hours. To get every alert, create a
-  **Utility** template (WhatsApp Manager → Message templates), set
-  `WHATSAPP_TEMPLATE` to its name, and use exactly these 9 variables in order:
-
-  ```
-  New call booked
-  Name: {{1}}
-  Business: {{2}}
-  Email: {{3}}
-  Phone: {{4}}
-  Website: {{5}}
-  Budget: {{6}}
-  When: {{7}}
-  Their time: {{8}}
-  Notes: {{9}}
-  Confirm the call with them by email.
-  ```
-
-If the send fails, the visitor sees "That didn't go through. Please try
-again" (so no lead is silently lost), and the reason appears in Vercel's
-function logs.
+If saving fails, the visitor sees "That didn't go through. Please try again"
+(so no lead is silently lost), and the reason appears in Vercel's function
+logs. A WhatsApp problem never blocks the booking: the row is still saved,
+and the script's error shows under Executions in Apps Script.
 
 ### Test locally
 

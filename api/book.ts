@@ -1,9 +1,12 @@
 // Vercel Function: POST /api/book
 //
-// Receives a booking from the page, checks it, and sends the lead to WhatsApp
-// through the WhatsApp Cloud API (Meta). It runs on the server, so the access
-// token never reaches the browser or the repo: it is read from Vercel's
-// environment variables (see .env.example and the README).
+// Receives a booking from the page, checks it, and forwards it to the Google
+// Sheet script (google-apps-script/Code.gs). The script saves it as a row and
+// sends it to your WhatsApp through the WhatsApp agent.
+//
+// Secrets stay off the website: the script's URL and the shared password live
+// in Vercel's environment variables, and the WhatsApp key lives in the
+// script's own properties. See .env.example and the README.
 //
 // This file is self-contained on purpose (no imports from src/): Vercel runs
 // it as its own Node.js function.
@@ -17,6 +20,8 @@ const BUDGETS: Record<string, string> = {
 const LIMITS = { name: 120, email: 200, phone: 40, business: 160, website: 200, notes: 1500, timeZone: 64 };
 const MAX_BODY_BYTES = 10_000;
 const MAX_DAYS_AHEAD = 62;
+// Leaves room for an Apps Script cold start; vercel.json allows the function 30s.
+const SHEET_TIMEOUT_MS = 25_000;
 
 type Lead = {
   name: string;
@@ -91,72 +96,39 @@ function formatWhen(d: Date, timeZone: string) {
   }).format(d);
 }
 
-/** The fields of a lead, in the order used for both the text message and template variables. */
-function leadFields(lead: Lead, ownerTimeZone: string) {
+/** The fields the sheet script expects (TABS.booking.keys in Code.gs). */
+function sheetFields(lead: Lead, ownerTimeZone: string) {
   return {
     name: lead.name,
-    business: lead.business || '-',
+    business: lead.business,
     email: lead.email,
-    phone: lead.phone || '-',
-    website: lead.website || 'No website yet',
+    phone: lead.phone,
+    website: lead.website ?? 'No website yet',
     budget: BUDGETS[lead.budget],
-    when: `${formatWhen(lead.start, ownerTimeZone)} (${lead.durationMin} min)`,
-    theirTime: `${formatWhen(lead.start, lead.timeZone)} (${lead.timeZone})`,
-    notes: lead.notes || '-',
+    callTimeYours: `${formatWhen(lead.start, ownerTimeZone)} (${lead.durationMin} min)`,
+    callTimeTheirs: formatWhen(lead.start, lead.timeZone),
+    timeZone: lead.timeZone,
+    notes: lead.notes,
   };
 }
 
-function textMessage(f: ReturnType<typeof leadFields>) {
-  return [
-    '*New call booked* 📅',
-    '',
-    `*Name:* ${f.name}`,
-    `*Business:* ${f.business}`,
-    `*Email:* ${f.email}`,
-    `*Phone:* ${f.phone}`,
-    `*Website:* ${f.website}`,
-    `*Budget:* ${f.budget}`,
-    `*When:* ${f.when}`,
-    `*Their time:* ${f.theirTime}`,
-    `*Notes:* ${f.notes}`,
-  ].join('\n');
-}
-
-/** Template variables can't contain line breaks, tabs or long runs of spaces. */
-const templateParam = (s: string) => s.replace(/\s+/g, ' ').trim().slice(0, 1000) || '-';
-
-async function sendWhatsApp(to: string, payload: Record<string, unknown>) {
-  const version = process.env.WHATSAPP_API_VERSION || 'v23.0';
-  const url = `https://graph.facebook.com/${version}/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ messaging_product: 'whatsapp', recipient_type: 'individual', to, ...payload }),
-    signal: AbortSignal.timeout(8000),
-  });
-  if (!res.ok) {
-    // Log Meta's error for the Vercel logs; never echo it to the visitor.
-    console.error(`WhatsApp send to ${to.slice(0, 4)}… failed: ${res.status} ${await res.text()}`);
-    return false;
+/** Browsers send the page's origin; refuse posts made from other websites (CSRF). */
+function crossSite(request: Request) {
+  const origin = request.headers.get('origin');
+  if (!origin) return false; // Non-browser clients; validation below still applies.
+  try {
+    return new URL(origin).host !== new URL(request.url).host;
+  } catch {
+    return true; // "null" or malformed origins
   }
-  return true;
 }
 
 export async function POST(request: Request): Promise<Response> {
-  // Only accept posts from this site's own pages.
-  const origin = request.headers.get('origin');
-  if (origin && new URL(origin).host !== new URL(request.url).host) return json(403, { ok: false, error: 'Forbidden.' });
+  if (crossSite(request)) return json(403, { ok: false, error: 'Forbidden.' });
 
-  const { WHATSAPP_TOKEN, WHATSAPP_PHONE_NUMBER_ID, WHATSAPP_NOTIFY_TO } = process.env;
-  const recipients = (WHATSAPP_NOTIFY_TO ?? '')
-    .split(',')
-    .map((n) => n.replace(/\D/g, ''))
-    .filter(Boolean);
-  if (!WHATSAPP_TOKEN || !WHATSAPP_PHONE_NUMBER_ID || !recipients.length) {
-    console.error('Booking received but WhatsApp is not configured (WHATSAPP_TOKEN, WHATSAPP_PHONE_NUMBER_ID, WHATSAPP_NOTIFY_TO).');
+  const { SHEET_WEBHOOK_URL, SHEET_SECRET } = process.env;
+  if (!SHEET_WEBHOOK_URL || !SHEET_SECRET) {
+    console.error('Booking received but the sheet is not configured (SHEET_WEBHOOK_URL, SHEET_SECRET).');
     return json(500, { ok: false, error: 'Booking is not available right now.' });
   }
 
@@ -168,38 +140,50 @@ export async function POST(request: Request): Promise<Response> {
   } catch {
     return json(400, { ok: false, error: 'Invalid request.' });
   }
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return json(400, { ok: false, error: 'Invalid request.' });
 
-  // Hidden field that people never see; bots fill it. Pretend it worked.
-  if (str(raw.company, 200)) return json(200, { ok: true });
+  // Hidden field that people never see; bots fill it. Pretend it worked, but
+  // log it so a real visitor caught by mistake can be found in Vercel's logs.
+  if (str(raw.hp, 200)) {
+    console.warn(`Spam trap caught a booking: ${str(raw.name, 120)} <${str(raw.email, 200)}>`);
+    return json(200, { ok: true });
+  }
 
   const lead = parseLead(raw);
   if (typeof lead === 'string') return json(400, { ok: false, error: lead });
 
   const ownerTimeZone = process.env.OWNER_TIMEZONE && validTimeZone(process.env.OWNER_TIMEZONE) ? process.env.OWNER_TIMEZONE : 'UTC';
-  const fields = leadFields(lead, ownerTimeZone);
 
-  // An approved template reaches you any time. A plain text message only
-  // arrives if you've messaged the business number in the last 24 hours.
-  const template = process.env.WHATSAPP_TEMPLATE;
-  const payload = template
-    ? {
-        type: 'template',
-        template: {
-          name: template,
-          language: { code: process.env.WHATSAPP_TEMPLATE_LANG || 'en' },
-          components: [
-            {
-              type: 'body',
-              parameters: Object.values(fields).map((v) => ({ type: 'text', text: templateParam(v) })),
-            },
-          ],
-        },
-      }
-    : { type: 'text', text: { preview_url: false, body: textMessage(fields) } };
+  try {
+    // Apps Script answers a POST with a redirect to the result; fetch follows it.
+    const res = await fetch(SHEET_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ secret: SHEET_SECRET, form: 'booking', ...sheetFields(lead, ownerTimeZone) }),
+      redirect: 'follow',
+      signal: AbortSignal.timeout(SHEET_TIMEOUT_MS),
+    });
+    const body = await res.text();
+    let result: { ok?: boolean; error?: string } = {};
+    try {
+      result = JSON.parse(body);
+    } catch {
+      // An HTML page here usually means the web app isn't deployed for "Anyone".
+    }
+    if (!res.ok || result.ok !== true) {
+      // Log for Vercel's function logs; never echo details to the visitor.
+      const reason = body.trimStart().startsWith('<')
+        ? 'got a web page instead of a reply: deploy the script as a Web app with "Who has access: Anyone" (not "Anyone with Google account"), and check SHEET_WEBHOOK_URL ends in /exec'
+        : (result.error ?? body.slice(0, 300));
+      console.error(`Sheet rejected the booking (${res.status}): ${reason}`);
+      return json(502, { ok: false, error: 'Could not save the booking. Please try again.' });
+    }
+  } catch (err) {
+    // On a timeout the row may still have been saved: check the sheet for duplicates.
+    console.error(`Could not reach the sheet: ${String(err)}`);
+    return json(502, { ok: false, error: 'Could not save the booking. Please try again.' });
+  }
 
-  const results = await Promise.allSettled(recipients.map((to) => sendWhatsApp(to, payload)));
-  const delivered = results.some((r) => r.status === 'fulfilled' && r.value);
-  if (!delivered) return json(502, { ok: false, error: 'Could not send the booking. Please try again.' });
   return json(200, { ok: true });
 }
 
