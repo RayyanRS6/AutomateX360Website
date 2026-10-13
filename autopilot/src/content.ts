@@ -11,6 +11,20 @@ export const brand = {
   year: 2026,
 };
 
+/**
+ * The switch between the two AutomateX360 sites in the header. Same order on
+ * both sites; `current` is this one. Links open in the same tab. `short` shows
+ * on screens too narrow for the full name.
+ */
+export const siteNav = {
+  label: 'AutomateX360 sites',
+  current: 'autopilot',
+  sites: [
+    { id: 'studio', name: 'Brand + Website Studio', short: 'Studio', href: 'https://studio.automatex360.com' },
+    { id: 'autopilot', name: brand.tagline, short: 'Autopilot', href: 'https://autopilot.automatex360.com' },
+  ],
+};
+
 export const config = {
   /** The offer, exactly as in the ads. index.html repeats the price in the title. */
   price: '$449',

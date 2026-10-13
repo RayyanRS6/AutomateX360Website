@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react';
-import { brand, cta } from '../content';
+import { brand, cta, siteNav } from '../content';
 import { CtaLink } from './ui';
 
-/** Floating pill header. No menu on purpose: the only action is booking. */
+const siteTab =
+  'block whitespace-nowrap rounded-full px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] transition-colors sm:px-3.5 sm:text-[11px] sm:tracking-[0.2em]';
+
+/** Floating pill header: the wordmark, a switch between our two sites, and booking. */
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
 
@@ -29,9 +32,32 @@ export function Header() {
           >
             {brand.name}
           </a>
-          <p className="relative mr-3 hidden whitespace-nowrap text-[10.5px] font-semibold uppercase tracking-[0.2em] text-ink/70 min-[390px]:block sm:mr-0 sm:text-[11px] sm:tracking-[0.24em]">
-            {brand.tagline}
-          </p>
+          <nav aria-label={siteNav.label} className="relative">
+            <ul className="flex items-center rounded-full bg-ink/[0.06] p-1">
+              {siteNav.sites.map((site) => {
+                const label = (
+                  <>
+                    <span className="lg:hidden">{site.short}</span>
+                    <span className="hidden lg:inline">{site.name}</span>
+                  </>
+                );
+                // Under 360px only the link to the other site fits next to the wordmark.
+                return (
+                  <li key={site.id} className={site.id === siteNav.current ? 'max-[359px]:hidden' : undefined}>
+                    {site.id === siteNav.current ? (
+                      <span aria-current="page" className={`${siteTab} bg-ink text-cream`}>
+                        {label}
+                      </span>
+                    ) : (
+                      <a href={site.href} className={`${siteTab} text-ink/70 hover:bg-ink/[0.06] hover:text-ink`}>
+                        {label}
+                      </a>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
           <CtaLink size="sm" tone="ink" className="relative hidden md:inline-flex">
             {cta.label}
           </CtaLink>

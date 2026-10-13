@@ -11,6 +11,20 @@ export const brand = {
   year: 2026,
 };
 
+/**
+ * The switch between the two AutomateX360 sites in the header. Same order on
+ * both sites; `current` is this one. Links open in the same tab. `short` shows
+ * on screens too narrow for the full name.
+ */
+export const siteNav = {
+  label: 'AutomateX360 sites',
+  current: 'studio',
+  sites: [
+    { id: 'studio', name: brand.tagline, short: 'Studio', href: 'https://studio.automatex360.com' },
+    { id: 'autopilot', name: 'Website + Booking System', short: 'Autopilot', href: 'https://autopilot.automatex360.com' },
+  ],
+};
+
 export const config = {
   /**
    * "We take [X] new projects a month so every build gets full attention."
