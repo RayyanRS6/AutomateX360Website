@@ -3,7 +3,7 @@
 One-page sales funnel for ad traffic. One goal: book a 20-minute call.
 
 This is the `studio/` folder of the AutomateX360 websites repo (the
-booking-system site is in `../booking`). On Vercel, this project's **Root
+booking-system site is in `../autopilot`). On Vercel, this project's **Root
 Directory** is `studio`. Run every command below from this folder.
 
 Built with Vite, TypeScript and Tailwind CSS. Components are written in React,

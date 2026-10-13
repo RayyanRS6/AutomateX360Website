@@ -1,6 +1,7 @@
 # AutomateX360 · Website + Booking System
 
-One-page sales funnel for the **$449/month, all of it** offer (ads in
+One-page sales funnel (autopilot.automatex360.com) for the **$449/month, all
+of it** offer (ads in
 `my ads/`). One goal: book a 20-minute call. It's the sister site of the studio
 funnel (studio.automatex360.com): same brand colours and type, the same
 GoHighLevel calendar, Google Sheet and WhatsApp alerts, with a more playful
@@ -11,13 +12,13 @@ and the build runs them on **Preact** (through `preact/compat`), which ships
 about a third of React's JavaScript. The production build is prerendered to
 static HTML, so the page shows before any JavaScript loads.
 
-This site lives in the `booking/` folder of the same repo as the studio site
+This site lives in the `autopilot/` folder of the same repo as the studio site
 (`../studio`). Each is its own Vercel project: same repo, different **Root
-Directory** (`booking` here, `studio` there).
+Directory** (`autopilot` here, `studio` there).
 
 ## Run it
 
-From this `booking/` folder:
+From this `autopilot/` folder:
 
 ```bash
 npm install
@@ -80,14 +81,14 @@ GHL's own error.
 
 1. In Vercel: **Add New → Project**, import the same GitHub repo as the studio
    site (`AutomateX360Website`).
-2. Under **Root Directory**, click Edit and pick **`booking`**. The rest
+2. Under **Root Directory**, click Edit and pick **`autopilot`**. The rest
    (Vite, `npm run build`, output `dist`, the `api/` functions) comes from
-   `booking/vercel.json`.
+   `autopilot/vercel.json`.
 3. **Settings → Environment Variables**: the same values as the studio project
    (`GHL_TOKEN`, `GHL_LOCATION_ID`, `GHL_CALENDAR_ID`, `SHEET_WEBHOOK_URL`,
    `SHEET_SECRET`), plus optional `GHL_TAG` and `OWNER_TIMEZONE`. See
    `.env.example`. Then redeploy.
-4. **Settings → Domains**: add the subdomain (e.g. `booking.automatex360.com`)
+4. **Settings → Domains**: add the subdomain `autopilot.automatex360.com`
    and create the CNAME record Vercel shows at your DNS provider.
 5. Make one test booking and check GHL, the sheet and WhatsApp.
 
