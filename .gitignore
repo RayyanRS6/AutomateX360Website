@@ -1,0 +1,16 @@
+node_modules
+dist
+dist-ssr
+.cache
+*.log
+
+# Secrets: real values live in Vercel's environment variables only.
+.env
+.env.*
+!.env.example
+.vercel
+
+# Local design references and tooling (not part of the site).
+design i like/
+my ads/
+.claude/

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>AutomateX360 · Custom websites from $2,000. See your homepage before you pay.</title>
+    <meta name="description" content="Not for someone who wants a $500 website. Custom brands and websites for owners who see value, not cost. See your new homepage before you pay anything." />
+    <meta name="theme-color" content="#ECE7DF" />
+    <meta property="og:title" content="Not for someone who wants a $500 website." />
+    <meta property="og:description" content="Custom brands and websites from $2,000. See your new homepage before you pay anything." />
+    <meta property="og:type" content="website" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <!--head-tags-->
+    <!--font-preloads-->
+    <script>
+      // Performance tier, decided before first paint. "lite" turns off backdrop
+      // blur, parallax and looping motion on devices likely to struggle.
+      // ?lite / ?full in the URL force a tier (handy for testing).
+      (function () {
+        var d = document.documentElement, c = d.classList, n = navigator, q = location.search;
+        c.add('js');
+        try {
+          var ios = /iP(hone|od|ad)/.test(n.userAgent) || (n.platform === 'MacIntel' && n.maxTouchPoints > 1);
+          var mem = n.deviceMemory, cores = n.hardwareConcurrency;
+          var save = n.connection && n.connection.saveData;
+          // Budget Android phones are octa-core but report 4GB or less.
+          var low = !ios && ((mem && mem <= 4) || (cores && cores <= 4));
+          if (/[?&]full\b/.test(q)) low = save = false;
+          if (low || save || /[?&]lite\b/.test(q)) c.add('lite');
+        } catch (e) {}
+        // The booking form is usable before the app script loads; until it
+        // has, stop a native submit from reloading the page.
+        document.addEventListener('submit', function (e) { if (!window.__hydrated) e.preventDefault(); }, true);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"><!--app-html--></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
