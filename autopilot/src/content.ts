@@ -305,7 +305,12 @@ export const booking = {
   ],
   card: { title: call, subtitle: 'Free · No obligation' },
   steps: ['Details', 'Time'],
+  // The card in the hero asks for the time first.
+  stepsTimeFirst: ['Time', 'Details'],
   detailsHeading: 'A few quick details.',
+  // Top of the hero card's details step: the time they picked, held until they confirm.
+  heldTime: 'Your call',
+  changeTime: 'Change',
   detailsNote: 'Takes about 20 seconds.',
   siteQuestion: 'Do you have a website?',
   siteOptions: [
@@ -349,6 +354,7 @@ export const booking = {
     nextMonth: 'Next month',
     date: 'Date',
     time: 'Time',
+    changeTime: 'Change the day and time',
     stepOf: (n: number, total: number) => `Step ${n} of ${total}`,
   },
   fields: {

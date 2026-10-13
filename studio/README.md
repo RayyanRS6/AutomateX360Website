@@ -61,10 +61,14 @@ on the GHL calendar (see "Set up GoHighLevel" below), not in `src/content.ts`:
 
 ## Booking → GoHighLevel + Google Sheet + WhatsApp
 
-The form has two steps: budget, website, name, email and phone, then a day
-and time. When a visitor reaches the time step, the page asks `api/slots.ts`
-for your free times in your **GoHighLevel calendar**, so anything you're
-already booked for never shows. When they confirm the time, `api/book.ts`:
+The page has the booking form twice, each in two steps. The one in the hero
+starts with a day and time, then asks for budget, website, name, email and
+phone; the one in the booking section asks for those details first, then the
+day and time. The calendar shows your free times from your **GoHighLevel
+calendar** (via `api/slots.ts`), so anything you're already booked for never
+shows; the hero's form loads them as soon as the page opens. Nothing is sent
+until the last step: its button checks every answer and that the time is
+still free, and only then sends the whole form once to `api/book.ts`, which:
 
 1. **GoHighLevel:** creates or updates the contact, books the appointment on
    your calendar (if someone took the time a moment earlier, the visitor is
@@ -77,6 +81,11 @@ already booked for never shows. When they confirm the time, `api/book.ts`:
 Everyone can book, whatever their budget. Picking "Under $2,000" asks how much
 their budget is, and that amount goes with the lead. A hidden spam-trap field
 quietly drops bot submissions.
+
+The Meta Pixel (`index.html`, events in `src/lib/pixel.ts`) sends `Lead` and
+`Schedule` only after a booking has gone through, never on a step change.
+`Lead` counts once per page view, whichever form was used; `Schedule` counts
+every booking.
 
 Nothing secret is in the browser or this repo: the GHL token, the sheet's URL
 and its password live in Vercel's environment variables, and the WhatsApp

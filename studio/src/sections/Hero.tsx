@@ -1,8 +1,9 @@
 import { useEffect, useRef } from 'react';
 import { CalendarCheck2, Check } from 'lucide-react';
-import { cta, hero } from '../content';
+import { hero } from '../content';
 import { initPointerDepth } from '../lib/motion';
-import { AgentCursor, BrowserFrame, CtaLink, PhoneFrame, PriceTag, vars } from '../components/ui';
+import { AgentCursor, BrowserFrame, PhoneFrame, PriceTag, vars } from '../components/ui';
+import { BookingWidget } from '../components/booking/BookingWidget';
 import { DesktopMock, PhoneMock } from './HeroMock';
 
 export function Hero() {
@@ -11,30 +12,40 @@ export function Hero() {
       <div aria-hidden className="hero-grid pointer-events-none absolute inset-0 -z-10" />
       <div aria-hidden className="hero-glow pointer-events-none absolute inset-0 -z-10" />
 
-      <div className="container-x grid items-center gap-y-9 sm:gap-y-12 lg:grid-cols-12 lg:gap-x-8 xl:gap-x-10">
-        {/* The headline is sized to its column (cqi) so it always breaks like
-            the ad: "Not for someone / who wants a $500 / website." */}
-        <div className="@container relative z-10 lg:col-span-6">
-          <h1 id="hero-h" className="font-serif text-[clamp(2.75rem,14.4cqi,6.6rem)] leading-[0.95] tracking-[-0.022em]">
-            {`${hero.headline.before} `}
-            <PriceTag price={hero.headline.price} />
+      <div className="container-x relative z-10 text-center">
+        {/* The headline breaks like the ad: "Not for someone / who wants a
+            $500 / website." The middle line is one unbreakable piece, too wide
+            to share a line with either neighbour, and the type is sized to the
+            box (cqi) so that piece always fits. */}
+        <div className="@container mx-auto max-w-[44rem]">
+          <h1 id="hero-h" className="font-serif text-[clamp(2.5rem,14.4cqi,6.6rem)] leading-[0.95] tracking-[-0.022em]">
+            {`${hero.headline.lead} `}
+            <span className="whitespace-nowrap">
+              {`${hero.headline.before} `}
+              <PriceTag price={hero.headline.price} />
+            </span>
             {' '}
             <em>{hero.headline.after}</em>
           </h1>
-
-          <p className="mt-5 max-w-[31rem] text-[1.0625rem] leading-[1.6] text-stone sm:mt-6 sm:text-lg">{hero.subhead}</p>
-
-          <div data-cta-zone className="loop cta-nudge mt-6 flex flex-col items-start gap-3.5 sm:mt-8">
-            <CtaLink className="w-full sm:w-auto">{cta.label}</CtaLink>
-            <p className="pl-1 text-[14px] text-stone">
-              {`${hero.ctaNote.before} `}
-              <strong className="font-semibold text-ink">{hero.ctaNote.strong}</strong>
-              {` ${hero.ctaNote.after}`}
-            </p>
-          </div>
         </div>
 
-        <div className="lg:col-span-6">
+        <p className="mx-auto mt-5 max-w-[34rem] text-[1.0625rem] leading-[1.6] text-stone sm:mt-6 sm:text-lg">{hero.subhead}</p>
+        <p className="mt-4 text-[14px] text-stone">
+          {`${hero.ctaNote.before} `}
+          <strong className="font-semibold text-ink">{hero.ctaNote.strong}</strong>
+          {` ${hero.ctaNote.after}`}
+        </p>
+      </div>
+
+      {/* The booking card (time first) beside the visual; stacked on phones,
+          card first. minmax(0,1fr) and min-w-0 stop the card's buttons from
+          widening the single phone column past the screen edge. */}
+      <div className="container-x mt-10 grid grid-cols-[minmax(0,1fr)] items-start gap-y-12 sm:mt-12 lg:mt-14 lg:grid-cols-12 lg:gap-x-8 xl:gap-x-10">
+        <div data-cta-zone className="min-w-0 lg:col-span-7">
+          <BookingWidget variant="hero" />
+        </div>
+
+        <div className="min-w-0 lg:col-span-5 lg:pt-10">
           <HeroStage />
         </div>
       </div>
@@ -120,8 +131,11 @@ function HeroStage() {
           </div>
         </div>
 
-        {/* Frosted chip: the call (hidden on the smallest screens to keep it calm) */}
-        <div aria-hidden data-speed="0.06" className="absolute bottom-[4%] right-[22%] hidden sm:block lg:bottom-[9%] lg:right-[12%]">
+        {/* Frosted chip: the call (hidden on the smallest screens to keep it
+            calm). The stage is shortest just past 1024px, so it sits lower
+            there to keep clear of the chip above, which moves at a different
+            depth and speed. */}
+        <div aria-hidden data-speed="0.06" className="absolute bottom-[4%] right-[22%] hidden sm:block lg:bottom-[2%] lg:right-[12%] xl:bottom-[9%]">
           <div data-depth="2.6" className="enter-pop" style={vars({ '--d': '950ms' })}>
             <div className="glass float-b flex items-center gap-3 rounded-2xl py-2.5 pl-2.5 pr-5">
               <span className="grid size-10 place-items-center rounded-xl bg-white text-ember-deep ring-1 ring-ink/5">

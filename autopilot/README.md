@@ -44,7 +44,7 @@ only the fallback used when GHL isn't connected.
 
 | Section | File | From the ads |
 | --- | --- | --- |
-| Hero, agents working the night shift | `src/sections/Hero.tsx` | "Wake up to a full calendar." |
+| Hero: headline, booking form, agents working the night shift | `src/sections/Hero.tsx` | "Wake up to a full calendar." |
 | The problem | `src/sections/Problem.tsx` | "Your competitor replied first." / "Ours replies in seconds." |
 | What you get | `src/sections/Included.tsx` | The five included items |
 | Open 24 hours | `src/sections/Night.tsx` | "Yes, we're Open." / the booked-out week |
@@ -60,9 +60,19 @@ out in container units so the cursors land on their targets at any width.
 ## Booking → GoHighLevel + Google Sheet + WhatsApp
 
 Exactly like the studio site (see `../studio/README.md` for the one-time GHL
-and Google Sheet setup). The form has two steps: whether they have a website
-plus their name, email and phone, then a day and time. Confirming the time
-books the call:
+and Google Sheet setup). The page has the same form twice
+(`src/components/booking/BookingWidget.tsx`), in two steps each:
+
+- **In the hero**, under the headline: a day and time first, then whether
+  they have a website plus their name, email and phone. Submitting the
+  details books the call.
+- **In the booking section** (`#book`, where every "Book a call" button
+  goes): the details first, then the time. Confirming the time books the
+  call.
+
+Either way nothing is sent until that last button, with every step filled
+in: no booking, no WhatsApp alert and no Meta Pixel event before it. Both
+forms send exactly the same booking, so everything below works for both:
 
 1. The time step loads your free times from the **same GHL calendar**
    (`api/slots.ts`), including its minimum notice.
@@ -73,10 +83,14 @@ books the call:
    the same WhatsApp alert. No change to the script is needed: the "Budget"
    column shows the plan and whether they need a new site or upkeep of
    theirs, and "Notes" shows the source ("Booking system website").
+4. Once the booking has gone through, the form sends the Meta Pixel events
+   (`src/lib/pixel.ts`): **Lead** (once per page view, whichever form they use)
+   and **Schedule** (every booking).
 
 If GHL refuses a booking (other than the time being taken), the lead still
 reaches the sheet and WhatsApp, marked "⚠️ NOT in your GHL calendar" with
-GHL's own error.
+GHL's own error. If the time was taken, the form asks for another time and
+keeps everything they typed.
 
 ## Deploy (second Vercel project from the same repo + subdomain)
 

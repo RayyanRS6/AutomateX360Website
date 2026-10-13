@@ -1,6 +1,7 @@
 import { CalendarCheck2, Check, Mail, Moon, SendHorizontal } from 'lucide-react';
-import { brand, cta, features, hero } from '../content';
-import { AgentCursor, CtaLink, Hanging, HeadingIcon, vars } from '../components/ui';
+import { brand, features, hero } from '../content';
+import { AgentCursor, Hanging, HeadingIcon, vars } from '../components/ui';
+import { BookingWidget } from '../components/booking/BookingWidget';
 import './hero.css';
 
 export function Hero() {
@@ -9,14 +10,17 @@ export function Hero() {
       <div aria-hidden className="hero-grid pointer-events-none absolute inset-0 -z-10" />
       <div aria-hidden className="hero-glow pointer-events-none absolute inset-0 -z-10" />
 
-      <div className="container-x grid items-center gap-y-12 lg:grid-cols-12 lg:gap-x-10">
-        <div className="@container relative z-10 lg:col-span-6">
+      {/* The headline, centred over the booking card and the scene. The h1 is
+          sized in container units of this block, so it stays the same share
+          of the measure at every width. */}
+      <div className="container-x">
+        <div className="@container relative z-10 mx-auto max-w-[64rem] text-center">
           <p className="enter-pop inline-flex items-center gap-2.5 rounded-full border border-ink/10 bg-white/60 py-1.5 pl-3 pr-3.5 text-[12.5px] font-semibold text-ink/80">
             <span className="live-dot" aria-hidden />
             {hero.status}
           </p>
 
-          <h1 id="hero-h" className="mt-5 font-serif text-[clamp(3rem,15.5cqi,6.7rem)] leading-[0.94] tracking-[-0.022em] sm:mt-6">
+          <h1 id="hero-h" className="mt-5 font-serif text-[clamp(3rem,13.5cqi,6.9rem)] leading-[0.94] tracking-[-0.022em] sm:mt-6">
             {`${hero.headline.before} `}
             <HeadingIcon>
               <CalendarCheck2 strokeWidth={2.4} />
@@ -25,15 +29,24 @@ export function Hero() {
             <em className="whitespace-nowrap">{hero.headline.em}</em>
           </h1>
 
-          <p className="mt-5 max-w-[31rem] text-[1.0625rem] leading-[1.6] text-stone sm:mt-6 sm:text-lg">{hero.subhead}</p>
+          <p className="mx-auto mt-5 max-w-[34rem] text-[1.0625rem] leading-[1.6] text-stone sm:mt-6 sm:text-lg">{hero.subhead}</p>
 
-          <div data-cta-zone className="mt-7 flex flex-col gap-5 sm:mt-8 sm:flex-row sm:items-center sm:gap-7">
-            <CtaLink className="w-full sm:w-auto">{cta.label}</CtaLink>
+          <div className="mt-6 flex justify-center text-left sm:mt-7">
             <PriceLine />
           </div>
         </div>
+      </div>
 
-        <div className="lg:col-span-6">
+      {/* The booking card (time first) on the left, the night shift on the
+          right; stacked on smaller screens. minmax(0,1fr) and min-w-0 stop the
+          card's buttons from widening the single phone column past the screen edge. */}
+      <div className="container-x mt-10 grid grid-cols-[minmax(0,1fr)] items-start gap-y-14 sm:mt-12 lg:mt-14 lg:grid-cols-12 lg:gap-x-10">
+        <div data-cta-zone className="relative z-10 min-w-0 lg:col-span-7">
+          <BookingWidget variant="hero" />
+        </div>
+
+        {/* Stays beside the card while a long step scrolls by. */}
+        <div className="min-w-0 lg:sticky lg:top-28 lg:col-span-5 lg:pt-2">
           <HeroScene />
         </div>
       </div>

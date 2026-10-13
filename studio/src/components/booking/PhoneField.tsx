@@ -3,6 +3,8 @@ import { booking } from '../../content';
 import { COUNTRIES, flag } from '../../lib/countries';
 
 type Props = {
+  /** The number input's id; its hint and error take `${id}-hint` and `${id}-err`. */
+  id: string;
   country: string;
   onCountry: (iso: string) => void;
   value: string;
@@ -16,11 +18,11 @@ type Props = {
  * <select> laid over a short "🇦🇪 +971" label, so phones open their own
  * scrollable list, and nothing heavy loads on the page.
  */
-export function PhoneField({ country, onCountry, value, onValue, error, className }: Props) {
+export function PhoneField({ id, country, onCountry, value, onValue, error, className }: Props) {
   const current = COUNTRIES.find((c) => c.iso === country) ?? COUNTRIES[0];
   return (
     <div className={className}>
-      <label htmlFor="f-phone" className="mb-1.5 block text-[14px] font-semibold">
+      <label htmlFor={id} className="mb-1.5 block text-[14px] font-semibold">
         {booking.fields.phone}
       </label>
       <div className="flex gap-2">
@@ -45,7 +47,7 @@ export function PhoneField({ country, onCountry, value, onValue, error, classNam
           </select>
         </div>
         <input
-          id="f-phone"
+          id={id}
           type="tel"
           inputMode="tel"
           autoComplete="tel-national"
@@ -54,16 +56,16 @@ export function PhoneField({ country, onCountry, value, onValue, error, classNam
           onChange={(e) => onValue(e.target.value)}
           aria-required="true"
           aria-invalid={!!error}
-          aria-describedby={error ? 'f-phone-err' : 'f-phone-hint'}
+          aria-describedby={error ? `${id}-err` : `${id}-hint`}
           className="field min-w-0 flex-1"
         />
       </div>
       {error ? (
-        <p id="f-phone-err" role="alert" className="mt-2 text-[13.5px] font-medium text-ember-deep">
+        <p id={`${id}-err`} role="alert" className="mt-2 text-[13.5px] font-medium text-ember-deep">
           {error}
         </p>
       ) : (
-        <p id="f-phone-hint" className="mt-1.5 text-[12.5px] text-stone">
+        <p id={`${id}-hint`} className="mt-1.5 text-[12.5px] text-stone">
           {booking.fields.phoneHint}
         </p>
       )}

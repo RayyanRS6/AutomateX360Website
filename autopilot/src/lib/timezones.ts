@@ -110,13 +110,14 @@ const NAMES: Record<string, string> = {
 };
 export type ZoneOption = { tz: string; label: string };
 
-export function zoneLabel(tz: string, at = new Date()) {
-  const offset = zoneOffset(tz, at);
+/** "Eastern Time (US) · GMT-4". With `at` null, just the name (offsets depend on the date). */
+export function zoneLabel(tz: string, at: Date | null = new Date()) {
+  const offset = at ? zoneOffset(tz, at) : '';
   return `${NAMES[tz] ?? zoneCity(tz)}${offset ? ` · ${offset}` : ''}`;
 }
 
 /** The picker's options, with the visitor's own zone first if it isn't listed. */
-export function zoneOptions(deviceZone: string, at = new Date()) {
+export function zoneOptions(deviceZone: string, at: Date | null = new Date()) {
   const listed = new Set(GROUPS.flatMap((g) => g.zones));
   const groups = GROUPS.map((g) => ({ region: g.region, zones: g.zones.map((tz) => ({ tz, label: zoneLabel(tz, at) })) }));
   if (!listed.has(deviceZone)) groups.unshift({ region: 'Your device', zones: [{ tz: deviceZone, label: zoneLabel(deviceZone, at) }] });

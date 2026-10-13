@@ -73,8 +73,10 @@ export const cta = {
 };
 
 export const hero = {
+  // Breaks like the ad: "Not for someone / who wants a $500 / website."
   headline: {
-    before: 'Not for someone who wants a',
+    lead: 'Not for someone',
+    before: 'who wants a',
     price: '$500',
     after: 'website.',
   },
@@ -268,6 +270,8 @@ export const booking = {
   ],
   card: { title: call, subtitle: 'Free · No obligation' },
   steps: ['Details', 'Time'],
+  // The card in the hero asks for the time first, then the details.
+  stepsTimeFirst: ['Time', 'Details'],
   detailsHeading: 'A few quick details.',
   detailsNote: 'Takes about 20 seconds.',
   budgetQuestion: 'What’s your website budget?',
@@ -284,6 +288,8 @@ export const booking = {
   noSite: 'I don’t have one yet',
   continue: 'Continue',
   back: 'Back',
+  // Beside the picked time at the top of the hero card's details step.
+  change: 'Change',
   errors: {
     budget: 'Choose the range that fits.',
     siteMissing: 'Add your site address, or tick “I don’t have one yet”.',
@@ -317,6 +323,7 @@ export const booking = {
     nextMonth: 'Next month',
     date: 'Date',
     time: 'Time',
+    changeTime: 'Change the time',
     stepOf: (n: number, total: number) => `Step ${n} of ${total}`,
   },
   fields: {

@@ -3,9 +3,9 @@ import { cta } from '../content';
 import { CtaLink } from './ui';
 
 /**
- * Thumb-reach CTA for phones. Appears once the hero button has scrolled away,
- * and hides again wherever another booking prompt is already on screen
- * (elements marked data-cta-zone).
+ * Thumb-reach CTA for phones. Appears once the hero's booking card has
+ * scrolled away, and hides again wherever another booking prompt is already
+ * on screen (elements marked data-cta-zone).
  */
 export function MobileCtaBar() {
   const [show, setShow] = useState(false);
