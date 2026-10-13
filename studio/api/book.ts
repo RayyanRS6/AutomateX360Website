@@ -5,7 +5,8 @@
 //      your calendar (GHL refuses times that were taken meanwhile), adds the
 //      tag "studio-website" and a note with the lead's details.
 //   2. Google Sheet: forwards the booking to the sheet script
-//      (google-apps-script/Code.gs), which saves a row and sends you WhatsApp.
+//      (the shared ../google-apps-script/Code.gs, kept locally, not on GitHub),
+//      which saves a row and sends you WhatsApp.
 // Either part can be switched off by leaving its environment variables empty.
 //
 // Secrets stay off the website: the GHL token, the sheet's URL and its
@@ -333,7 +334,7 @@ export async function POST(request: Request): Promise<Response> {
   const theirNotes = [lead.notes ? `Their notes: ${lead.notes}` : '', 'Source: Studio website'].filter(Boolean).join(' · ');
   const notes =
     ghlResult?.status === 'failed'
-      ? `${ghlResult.unsure ? '⚠️ MAYBE NOT in your GHL calendar: check GHL before adding it.' : '⚠️ NOT in your GHL calendar, add it manually.'} GHL said: ${ghlResult.reason.replace(/\.+$/, '')}. ${theirNotes}`
+      ? `${ghlResult.unsure ? '⚠️ MAYBE NOT in your GHL calendar: check GHL before adding it.' : '⚠️ NOT in your GHL calendar, add it manually.'} GHL said: ${ghlResult.reason.replace(/\.+$/, '')} · ${theirNotes}`
       : theirNotes;
   const [, sheetOk] = await Promise.all([
     ghlResult?.status === 'booked' && ghl ? finishInGhl(ghl, ghlResult.contactId, `Booked via the studio website.\n${details}`) : null,

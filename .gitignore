@@ -15,3 +15,7 @@ dist-ssr
 .claude/
 design i like/
 my ads/
+
+# The Google Sheet + WhatsApp script both sites post to. Kept on the owner's
+# computer only; the deployed copy lives in Google Apps Script.
+/google-apps-script/

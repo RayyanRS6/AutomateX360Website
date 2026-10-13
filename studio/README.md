@@ -71,7 +71,7 @@ already booked for never shows. When they confirm the time, `api/book.ts`:
    asked to pick another), then adds the tag **`studio-website`** and a note
    with the call time, budget, website and phone.
 2. **Google Sheet → WhatsApp:** forwards the booking, with a shared password,
-   to the sheet script (`google-apps-script/Code.gs`), which saves a row and
+   to the sheet script (the shared `google-apps-script/Code.gs`, local only), which saves a row and
    sends you a WhatsApp alert.
 
 Everyone can book, whatever their budget. Picking "Under $2,000" asks how much
@@ -100,9 +100,11 @@ agent's API key lives in the sheet script's Script Properties.
 
 1. Create a Google Sheet. From inside it, open **Extensions → Apps Script**
    (this attaches the script to the sheet).
-2. Replace everything in `Code.gs` with `google-apps-script/Code.gs` from this
-   repo, and save (Ctrl+S). If you're not in Pakistan, change `TIME_ZONE` at
-   the top to your zone (the same value as `OWNER_TIMEZONE` in Vercel).
+2. Replace everything in `Code.gs` with the shared sheet script,
+   `google-apps-script/Code.gs` at the top of your local copy of this repo
+   (it's kept off GitHub; one script serves both sites), and save (Ctrl+S).
+   If you're not in Pakistan, change `TIME_ZONE` at the top to your zone (the
+   same value as `OWNER_TIMEZONE` in Vercel).
 3. **Project Settings** (gear icon) → **Script Properties** → add:
    - `SHARED_SECRET`: a long random password (you'll put the same value in Vercel).
    - `WHATSAPP_API_KEY`: your WhatsApp agent's API key.
@@ -114,7 +116,8 @@ agent's API key lives in the sheet script's Script Properties.
    script: click **Advanced → Go to (project name) (unsafe)**, tick
    **Select all**, then **Continue**. This creates the **Bookings** tab.
 5. Send your WhatsApp agent any message from your phone, then run
-   `connectWhatsApp`. You get "✅ Connected!" on WhatsApp when it works.
+   `connectWhatsApp`. You get "✅ Connected!" on WhatsApp when it works. Run
+   `sendTestAlert` to see what a booking alert looks like.
 6. **Deploy → New deployment →** gear icon **→ Web app**. Execute as: **Me**.
    Who has access: **Anyone** (not "Anyone with Google account"). Click
    **Deploy** and copy the Web app URL (ends in `/exec`).
