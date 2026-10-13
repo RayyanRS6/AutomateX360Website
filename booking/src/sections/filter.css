@@ -1,0 +1,212 @@
+/* Filter: the rising bar chart from the ad.
+   Inside the chart everything sits on a fixed 100 × 84 grid in container
+   units (cqw of .fit-chart), like the hero scene, so the Follow-up agent's
+   path lands on the "You, with it" label at every width:
+   - plot area from 12cqw to the baseline at 80cqw (68cqw tall)
+   - six bars 12cqw wide with 5.6cqw gaps; the ember bar starts at 88cqw
+     and its top is at ~14cqw
+   - the label's right edge at 85cqw, its tail pointing at the ember bar.
+   Resting styles are the finished chart. The bars grow once each time the
+   chart comes on screen (.playing), never on lite devices or with reduced
+   motion. */
+
+.fit-card {
+  position: relative;
+  padding: 16px 16px 14px;
+  border-radius: 24px;
+  background: var(--color-paper);
+  box-shadow:
+    0 0 0 1px rgb(17 17 17 / 0.05),
+    0 40px 70px -40px rgb(17 17 17 / 0.45),
+    0 12px 24px -14px rgb(17 17 17 / 0.16);
+  transform: rotate(1.2deg);
+}
+/* A strip of tape holding the card up. */
+.fit-tape {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: -12px;
+  width: 88px;
+  height: 24px;
+  margin-left: -44px;
+  border-radius: 2px;
+  background: rgb(245 183 31 / 0.55);
+  box-shadow: 0 1px 2px rgb(17 17 17 / 0.08);
+  transform: rotate(-4deg);
+}
+
+.fit-chart {
+  container-type: inline-size;
+}
+.fit-stage {
+  position: relative;
+  aspect-ratio: 100 / 84;
+}
+
+/* Axis title, top left. */
+.fit-axis {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 1.2cqw;
+  font-family: var(--font-mono);
+  font-size: max(10.5px, 3.1cqw);
+  line-height: 1.2;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--color-stone);
+}
+.fit-axis svg {
+  flex: none;
+  width: 1.3em;
+  height: 1.3em;
+  color: var(--color-ink);
+}
+
+/* Faint guide lines every quarter of the plot. */
+.fit-grid {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 12cqw;
+  height: 68cqw;
+  background: linear-gradient(to bottom, rgb(17 17 17 / 0.08) 1px, transparent 1px) 0 0 / 100% 17cqw;
+}
+
+.fit-bars {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 12cqw;
+  height: 68cqw;
+  display: flex;
+  align-items: flex-end;
+  gap: 5.6cqw;
+}
+.fit-bar {
+  flex: 1 1 0;
+  height: var(--h);
+  border-radius: 1.8cqw 1.8cqw 0 0;
+  background: var(--color-ink);
+  transform-origin: 50% 100%;
+}
+.fit-bar-you {
+  background: var(--color-ember);
+  box-shadow: 0 3cqw 6cqw -3cqw rgb(240 68 30 / 0.7);
+}
+.fit-base {
+  position: absolute;
+  left: -1.5cqw;
+  right: -1.5cqw;
+  top: 80cqw;
+  height: 2px;
+  margin-top: -1px;
+  border-radius: 2px;
+  background: var(--color-ink);
+}
+
+/* "You, with it", pointing at the ember bar. */
+.fit-you {
+  position: absolute;
+  z-index: 2;
+  right: 15cqw;
+  top: 14cqw;
+  display: flex;
+  align-items: center;
+  gap: 1.6cqw;
+  padding: 1.5cqw 3cqw 1.6cqw 2.4cqw;
+  border-radius: 999px;
+  background: var(--color-ink);
+  color: var(--color-cream);
+  font-size: max(10.5px, 3.5cqw);
+  font-weight: 650;
+  line-height: 1.2;
+  white-space: nowrap;
+  box-shadow: 0 2cqw 4cqw -2cqw rgb(17 17 17 / 0.55);
+  transform-origin: 100% 50%;
+}
+.fit-you::before {
+  content: '';
+  flex: none;
+  width: max(6px, 1.8cqw);
+  height: max(6px, 1.8cqw);
+  border-radius: 50%;
+  background: var(--color-sun);
+}
+.fit-you::after {
+  content: '';
+  position: absolute;
+  right: -1.2cqw;
+  top: 50%;
+  width: 3.2cqw;
+  height: 3.2cqw;
+  margin-top: -1.6cqw;
+  border-radius: 0.5cqw;
+  background: inherit;
+  transform: rotate(45deg);
+}
+
+/* The Follow-up agent, resting on the label. */
+.fit-cur {
+  transform: translate(75cqw, 18.5cqw);
+}
+
+@media (width >= 640px) {
+  .fit-card {
+    padding: 26px 26px 22px;
+    border-radius: 30px;
+    transform: rotate(1.8deg);
+  }
+}
+
+/* ── One pass when the chart comes on screen ── */
+@media (prefers-reduced-motion: no-preference) {
+  html:not(.lite) .fit-chart.playing .fit-bar {
+    animation: fit-grow 0.95s var(--ease-spring) calc(0.45s + var(--i, 0) * 0.1s) 1 backwards;
+  }
+  html:not(.lite) .fit-chart.playing .fit-cur {
+    animation: fit-cur 1.3s var(--ease-soft) 0.7s 1 backwards;
+  }
+  html:not(.lite) .fit-chart.playing .fit-cur .agent-click {
+    animation: agent-click 0.6s ease-out 1.9s 1;
+  }
+  html:not(.lite) .fit-chart.playing .fit-you {
+    animation: fit-pop 0.6s var(--ease-spring) 1.9s 1 backwards;
+  }
+}
+@keyframes fit-grow {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: none;
+  }
+}
+/* The agent comes in over the growing bars and places the label. */
+@keyframes fit-cur {
+  0% {
+    opacity: 0;
+    transform: translate(22cqw, 64cqw);
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: translate(75cqw, 18.5cqw);
+  }
+}
+@keyframes fit-pop {
+  from {
+    opacity: 0;
+    transform: translateX(3cqw) scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

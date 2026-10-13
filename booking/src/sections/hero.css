@@ -1,0 +1,747 @@
+/* Hero scene: the night shift.
+   Everything sits on a 100 × 106 grid in container units (cqw of .hero-scene),
+   so the agents' paths below land on the same spots at every screen size.
+   Resting styles are the finished scene; the keyframes only run while the
+   scene is on screen (.playing), never on lite devices or with reduced motion.
+   One cycle is 13s; every item that appears during a cycle fades out over the
+   last 5% so the next cycle starts clean. */
+
+.hero-scene {
+  container-type: inline-size;
+}
+.hs-stage {
+  position: relative;
+  aspect-ratio: 100 / 106;
+  font-size: 3.1cqw;
+  line-height: 1.3;
+}
+.hs-ico {
+  width: 1em;
+  height: 1em;
+  flex: none;
+}
+
+/* ── Static pieces ── */
+.hs-clock {
+  position: absolute;
+  left: 0;
+  top: 0.6cqw;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 1.2cqw;
+  height: 6cqw;
+  padding: 0 2.4cqw 0 1.9cqw;
+  border-radius: 999px;
+  background: var(--color-ink);
+  color: var(--color-cream);
+  font-family: var(--font-mono);
+  font-size: 2.7cqw;
+  letter-spacing: 0.06em;
+  box-shadow: 0 10px 20px -10px rgb(17 17 17 / 0.6);
+}
+
+.hs-browser {
+  position: absolute;
+  left: 0;
+  top: 9cqw;
+  z-index: 1;
+  width: 64cqw;
+  height: 71cqw;
+  overflow: hidden;
+  border-radius: 3.2cqw;
+  background: #fff;
+  box-shadow:
+    0 0 0 1px rgb(17 17 17 / 0.07),
+    0 40px 70px -40px rgb(17 17 17 / 0.5),
+    0 18px 30px -20px rgb(17 17 17 / 0.25);
+}
+.hs-bar {
+  display: flex;
+  align-items: center;
+  gap: 1.2cqw;
+  height: 6cqw;
+  padding: 0 2.4cqw;
+  background: #f2f0ec;
+  border-bottom: 1px solid rgb(17 17 17 / 0.06);
+}
+.hs-bar i {
+  width: 1.6cqw;
+  height: 1.6cqw;
+  flex: none;
+  border-radius: 50%;
+  background: rgb(17 17 17 / 0.15);
+}
+.hs-url {
+  flex: 1;
+  min-width: 0;
+  margin-left: 1.6cqw;
+  padding: 0.5cqw 2cqw;
+  border-radius: 1.2cqw;
+  background: #fff;
+  color: rgb(17 17 17 / 0.65);
+  font-size: 2.3cqw;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hs-example {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 1.9cqw;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-stone);
+}
+.hs-chat-head {
+  display: flex;
+  align-items: center;
+  gap: 2cqw;
+  height: 8.5cqw;
+  padding: 0 3cqw;
+  border-bottom: 1px solid rgb(17 17 17 / 0.07);
+  font-size: 2.9cqw;
+}
+.hs-avatar {
+  display: grid;
+  place-items: center;
+  width: 5.4cqw;
+  height: 5.4cqw;
+  flex: none;
+  border-radius: 1.6cqw;
+  background: var(--color-ink);
+  color: var(--color-cream);
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 3.6cqw;
+}
+.hs-online {
+  display: flex;
+  align-items: center;
+  gap: 1.2cqw;
+  font-size: 2.3cqw;
+  color: var(--color-stone);
+}
+.hs-online .live-dot {
+  width: 1.5cqw;
+  height: 1.5cqw;
+}
+
+/* Chat messages: placed, not flowed, so the agents can aim at them. */
+.hs-ask,
+.hs-typing,
+.hs-answer,
+.hs-booked,
+.hs-input {
+  position: absolute;
+  z-index: 2;
+}
+.hs-ask {
+  left: 3cqw;
+  top: 26cqw;
+  max-width: 44cqw;
+}
+.hs-typing {
+  right: 39cqw;
+  top: 40cqw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 14cqw;
+  height: 7cqw;
+  padding: 0;
+  opacity: 0;
+}
+.hs-typing .typing i {
+  width: 1.4cqw;
+  height: 1.4cqw;
+}
+.hs-answer {
+  right: 39cqw;
+  top: 40cqw;
+  width: 46cqw;
+  height: 18cqw;
+}
+.hs-chip {
+  position: absolute;
+  top: 11.4cqw;
+  display: flex;
+  align-items: center;
+  height: 5cqw;
+  padding: 0 2cqw;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.1);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.28);
+  font-size: 2.6cqw;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.hs-chip-1 {
+  left: 2.6cqw;
+}
+.hs-chip-2 {
+  left: 19.5cqw;
+}
+.hs-chip-on {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: inherit;
+  background: var(--color-ember);
+  color: var(--color-ink);
+}
+.hs-booked {
+  right: 39cqw;
+  top: 61cqw;
+  display: flex;
+  align-items: center;
+  gap: 1.3cqw;
+  font-size: 2.9cqw;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.hs-input {
+  left: 3cqw;
+  top: 72.5cqw;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 58cqw;
+  height: 5.5cqw;
+  padding: 0 0.6cqw 0 2.4cqw;
+  border-radius: 999px;
+  background: #f3efe8;
+  color: rgb(17 17 17 / 0.5);
+  font-size: 2.6cqw;
+}
+.hs-send {
+  display: grid;
+  place-items: center;
+  width: 4.3cqw;
+  height: 4.3cqw;
+  border-radius: 50%;
+  background: var(--color-ink);
+  color: var(--color-cream);
+}
+.hs-send svg {
+  width: 2.3cqw;
+  height: 2.3cqw;
+}
+
+/* Your calendar (the ad's black board with red "Booked" chips). */
+.hs-cal {
+  position: absolute;
+  left: 67cqw;
+  top: 42cqw;
+  z-index: 3;
+  width: 33cqw;
+  padding: 2.4cqw 2.4cqw 2.6cqw;
+  border-radius: 3cqw;
+  background: var(--color-ink);
+  color: var(--color-cream);
+  box-shadow:
+    0 30px 50px -26px rgb(17 17 17 / 0.7),
+    0 10px 18px -10px rgb(17 17 17 / 0.4);
+}
+.hs-cal-title {
+  font-size: 2.6cqw;
+  font-weight: 600;
+}
+.hs-cal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5cqw 1.6cqw;
+  margin-top: 2cqw;
+}
+.hs-cal-day {
+  font-family: var(--font-mono);
+  font-size: 2.1cqw;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-fog);
+}
+.hs-slot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 6.2cqw;
+  border-radius: 1.6cqw;
+  font-size: 2.5cqw;
+  font-weight: 700;
+}
+.hs-slot-on {
+  background: var(--color-ember);
+  color: var(--color-ink);
+}
+.hs-slot-empty {
+  border: 1.5px dashed rgb(255 255 255 / 0.28);
+}
+.hs-target {
+  position: absolute;
+  inset: -1.5px;
+}
+
+/* Confirmation email. */
+.hs-toast {
+  position: absolute;
+  left: 21cqw;
+  top: 83.5cqw;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 2.2cqw;
+  width: 56cqw;
+  padding: 2.2cqw 2.4cqw;
+  border-radius: 3cqw;
+  background: #fff;
+  font-size: 2.8cqw;
+  box-shadow:
+    0 0 0 1px rgb(17 17 17 / 0.06),
+    0 24px 40px -22px rgb(17 17 17 / 0.5);
+}
+.hs-toast-ico {
+  display: grid;
+  place-items: center;
+  width: 7cqw;
+  height: 7cqw;
+  flex: none;
+  border-radius: 2cqw;
+  background: var(--color-sun);
+  color: var(--color-ink);
+}
+.hs-toast-ico svg {
+  width: 3.6cqw;
+  height: 3.6cqw;
+}
+.hs-toast-body {
+  display: block;
+  overflow: hidden;
+  color: var(--color-stone);
+  font-size: 2.4cqw;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.hs-toast-check {
+  display: grid;
+  place-items: center;
+  width: 5cqw;
+  height: 5cqw;
+  flex: none;
+  margin-left: auto;
+  border-radius: 50%;
+  background: var(--color-ink);
+  color: var(--color-cream);
+}
+.hs-toast-check svg {
+  width: 2.8cqw;
+  height: 2.8cqw;
+}
+
+.hs-note {
+  position: absolute;
+  left: 0;
+  top: 85cqw;
+  z-index: 4;
+  width: 22cqw;
+  padding: 2.4cqw 2.2cqw 3cqw;
+  border-radius: 0.6cqw;
+  font-family: var(--font-serif);
+  font-size: 3.3cqw;
+  font-style: italic;
+  line-height: 1.12;
+  transform: rotate(-6deg);
+}
+
+/* The hanging price tag. */
+.hs-tag {
+  position: absolute;
+  left: 71.5cqw;
+  top: -1cqw;
+  z-index: 4;
+  width: 24cqw;
+  --pin: var(--color-ink);
+}
+.hs-tag-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 1.6cqw 3cqw;
+  border-radius: 2.6cqw 2.6cqw 3cqw 3cqw;
+  background: var(--color-ink);
+  color: var(--color-cream);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.12),
+    0 22px 34px -18px rgb(17 17 17 / 0.65);
+}
+/* Centred 20px below the card's top edge, where the string ends. */
+.hs-tag-hole {
+  width: 12px;
+  height: 12px;
+  margin: 14px 0 1.8cqw;
+  border-radius: 50%;
+  background: var(--color-cream);
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.55);
+}
+.hs-tag-top {
+  font-size: 2.1cqw;
+  letter-spacing: 0.18em;
+  color: var(--color-fog);
+}
+.hs-tag-amount {
+  margin-top: 0.6cqw;
+  font-family: var(--font-serif);
+  font-size: 9cqw;
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+}
+.hs-tag-unit {
+  margin-top: 0.8cqw;
+  font-size: 2.7cqw;
+  font-weight: 600;
+}
+
+/* ── The agents: resting spots (the finished scene) ── */
+.hs-cur-reply {
+  transform: translate(32cqw, 74.5cqw);
+}
+.hs-cur-booking {
+  transform: translate(86cqw, 66cqw);
+}
+.hs-cur-followup {
+  transform: translate(64cqw, 97cqw);
+}
+.hs-carry {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 5;
+  padding: 0.9cqw 2.2cqw;
+  border-radius: 1.4cqw;
+  background: var(--color-ember);
+  color: var(--color-ink);
+  font-size: 2.5cqw;
+  font-weight: 700;
+  opacity: 0;
+  box-shadow: 0 10px 18px -8px rgb(17 17 17 / 0.55);
+  transform: translate(93cqw, 60.9cqw);
+}
+
+/* ── The cycle ── */
+@media (prefers-reduced-motion: no-preference) {
+  html:not(.lite) .hero-scene.playing {
+    --cycle: 13s;
+  }
+  html:not(.lite) .hero-scene.playing :is(.hs-ask, .hs-typing, .hs-answer, .hs-chip-on, .hs-booked, .hs-target, .hs-toast, .hs-toast-check, .hs-carry, .hs-cur, .agent-click) {
+    animation-duration: var(--cycle);
+    animation-iteration-count: infinite;
+    animation-timing-function: var(--ease-soft);
+  }
+  html:not(.lite) .hero-scene.playing .hs-ask {
+    animation-name: hs-ask;
+  }
+  html:not(.lite) .hero-scene.playing .hs-typing {
+    animation-name: hs-typing;
+  }
+  html:not(.lite) .hero-scene.playing .hs-answer {
+    animation-name: hs-answer;
+  }
+  html:not(.lite) .hero-scene.playing .hs-chip-on {
+    animation-name: hs-chip-on;
+  }
+  html:not(.lite) .hero-scene.playing .hs-booked {
+    animation-name: hs-booked;
+  }
+  html:not(.lite) .hero-scene.playing .hs-target {
+    animation-name: hs-target;
+  }
+  html:not(.lite) .hero-scene.playing .hs-toast {
+    animation-name: hs-toast;
+  }
+  html:not(.lite) .hero-scene.playing .hs-toast-check {
+    animation-name: hs-check;
+  }
+  html:not(.lite) .hero-scene.playing .hs-carry {
+    animation-name: hs-carry;
+    animation-timing-function: linear;
+  }
+  html:not(.lite) .hero-scene.playing .hs-cur-reply {
+    animation-name: hs-cur-reply;
+  }
+  html:not(.lite) .hero-scene.playing .hs-cur-booking {
+    animation-name: hs-cur-booking;
+  }
+  html:not(.lite) .hero-scene.playing .hs-cur-followup {
+    animation-name: hs-cur-followup;
+  }
+  html:not(.lite) .hero-scene.playing .hs-cur-booking .agent-click {
+    animation-name: hs-click-booking;
+    animation-timing-function: ease-out;
+  }
+  html:not(.lite) .hero-scene.playing .hs-cur-followup .agent-click {
+    animation-name: hs-click-followup;
+    animation-timing-function: ease-out;
+  }
+}
+
+/* Message pops in at its cue, holds, and clears at the end of the cycle. */
+@keyframes hs-ask {
+  0%,
+  2% {
+    opacity: 0;
+    transform: translateY(2cqw) scale(0.94);
+  }
+  5%,
+  95% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: none;
+  }
+}
+@keyframes hs-typing {
+  0%,
+  8% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  10%,
+  21% {
+    opacity: 1;
+    transform: none;
+  }
+  23%,
+  100% {
+    opacity: 0;
+    transform: none;
+  }
+}
+@keyframes hs-answer {
+  0%,
+  22% {
+    opacity: 0;
+    transform: translateY(2cqw) scale(0.94);
+  }
+  25%,
+  95% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: none;
+  }
+}
+@keyframes hs-chip-on {
+  0%,
+  39.5% {
+    opacity: 0;
+  }
+  40.5%,
+  95% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes hs-booked {
+  0%,
+  45% {
+    opacity: 0;
+    transform: translateY(2cqw) scale(0.94);
+  }
+  48%,
+  95% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: none;
+  }
+}
+@keyframes hs-target {
+  0%,
+  53.5% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  56%,
+  95% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: none;
+  }
+}
+@keyframes hs-toast {
+  0%,
+  58% {
+    opacity: 0;
+    transform: translateY(3cqw) scale(0.96);
+  }
+  61%,
+  95% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: none;
+  }
+}
+@keyframes hs-check {
+  0%,
+  64.5% {
+    transform: scale(0);
+  }
+  67%,
+  100% {
+    transform: none;
+  }
+}
+
+/* Reply agent: types the answer, points at it, types the confirmation. */
+@keyframes hs-cur-reply {
+  0%,
+  4%,
+  100% {
+    transform: translate(32cqw, 74.5cqw);
+  }
+  8% {
+    transform: translate(33cqw, 75cqw);
+  }
+  12% {
+    transform: translate(32.2cqw, 74.4cqw);
+  }
+  16% {
+    transform: translate(33.2cqw, 74.9cqw);
+  }
+  20% {
+    transform: translate(32.4cqw, 74.5cqw);
+  }
+  27%,
+  31% {
+    transform: translate(47cqw, 47cqw);
+  }
+  36% {
+    transform: translate(32cqw, 74.5cqw);
+  }
+  41% {
+    transform: translate(33.2cqw, 75cqw);
+  }
+  45% {
+    transform: translate(32.3cqw, 74.4cqw);
+  }
+  50% {
+    transform: translate(32cqw, 74.5cqw);
+  }
+}
+
+/* Booking agent: clicks 10:30 AM, drags the booking to Saturday, drops it. */
+@keyframes hs-cur-booking {
+  0%,
+  30%,
+  60%,
+  100% {
+    transform: translate(86cqw, 66cqw);
+  }
+  38%,
+  42% {
+    transform: translate(30cqw, 54.2cqw);
+  }
+  53%,
+  55% {
+    transform: translate(91cqw, 57.4cqw);
+  }
+}
+@keyframes hs-click-booking {
+  0%,
+  39.5% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  40% {
+    opacity: 0.9;
+    transform: scale(0.3);
+  }
+  44% {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+  53.9% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  54.4% {
+    opacity: 0.9;
+    transform: scale(0.3);
+  }
+  58.4%,
+  100% {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}
+/* The chip being dragged rides just below the pointer. */
+@keyframes hs-carry {
+  0%,
+  42% {
+    opacity: 0;
+    transform: translate(32cqw, 57.7cqw) scale(0.6);
+  }
+  43.5% {
+    opacity: 1;
+    transform: translate(32cqw, 57.7cqw) scale(1);
+  }
+  44% {
+    opacity: 1;
+    transform: translate(32cqw, 57.7cqw);
+  }
+  53% {
+    opacity: 1;
+    transform: translate(93cqw, 60.9cqw) rotate(4deg);
+  }
+  54.5%,
+  100% {
+    opacity: 0;
+    transform: translate(93cqw, 60.9cqw) scale(0.8);
+  }
+}
+
+/* Follow-up agent: sends the confirmation once the booking lands. */
+@keyframes hs-cur-followup {
+  0%,
+  57%,
+  72%,
+  100% {
+    transform: translate(64cqw, 97cqw);
+  }
+  63%,
+  67% {
+    transform: translate(72.2cqw, 89.4cqw);
+  }
+}
+@keyframes hs-click-followup {
+  0%,
+  64.5% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  65% {
+    opacity: 0.9;
+    transform: scale(0.3);
+  }
+  69%,
+  100% {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}

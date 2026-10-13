@@ -2,6 +2,15 @@
 
 One-page sales funnel for ad traffic. One goal: book a 20-minute call.
 
+This repo holds two sites, each deployed as its own Vercel project:
+
+| Site | Folder | Vercel Root Directory |
+| --- | --- | --- |
+| Brand + Website Studio (studio.automatex360.com) | repo root | (empty) |
+| Website + Booking System, $449/month | `booking/` | `booking` (see `booking/README.md`) |
+
+This README is about the studio site.
+
 Built with Vite, TypeScript and Tailwind CSS. Components are written in React,
 and the build runs them on **Preact** (through `preact/compat`), which ships
 about a third of React's JavaScript (29 KB instead of 89 KB gzipped). To go

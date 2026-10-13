@@ -1,0 +1,601 @@
+/* Night: "While you sleep".
+   The sky (stars, the sign's glow) is static and painted once. The sign sways
+   through the shared .hang rules. The only scene is the week board: while it
+   is on screen the Booking agent books it chip by chip on a 10s cycle.
+   Resting styles are the finished board (every chip shown, cursor on the last
+   one), which is what lite devices, reduced motion and the prerendered page
+   show. */
+
+/* ── Sky ── */
+/* Three small tiles of different sizes, one star each, so the stars never
+   line up into a grid. Faded out before the board. */
+.night-stars {
+  background-image:
+    radial-gradient(circle at 23% 31%, rgb(236 231 223 / 0.6) 0 1px, transparent 1.6px),
+    radial-gradient(circle at 71% 64%, rgb(236 231 223 / 0.42) 0 0.8px, transparent 1.4px),
+    radial-gradient(circle at 46% 18%, rgb(245 183 31 / 0.55) 0 1px, transparent 1.6px);
+  background-size:
+    211px 197px,
+    293px 241px,
+    367px 331px;
+  background-position:
+    0 0,
+    97px 53px,
+    181px 127px;
+  -webkit-mask-image: linear-gradient(to bottom, #000 25%, transparent 62%);
+  mask-image: linear-gradient(to bottom, #000 25%, transparent 62%);
+}
+
+/* A lit sign: a soft warm pool of light behind it. z-index -1 keeps it under
+   the heading and timeline it reaches (positioned, it would paint over them). */
+.night-sign-glow {
+  position: absolute;
+  z-index: -1;
+  left: 50%;
+  top: 46%;
+  width: 560px;
+  height: 560px;
+  margin: -280px 0 0 -280px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(245 183 31 / 0.11), rgb(240 68 30 / 0.05) 55%, transparent);
+  pointer-events: none;
+}
+
+/* ── The "Yes, we're Open" sign ── */
+.night-sign {
+  width: min(80vw, 330px);
+}
+@media (width >= 1024px) {
+  .night-sign {
+    width: min(100%, 370px);
+  }
+}
+/* Keep the punched holes above the card. */
+.night-sign .hang-hole {
+  z-index: 1;
+}
+.night-sign-card {
+  position: relative;
+  padding: 50px 22px 30px;
+  border-radius: 20px;
+  text-align: center;
+}
+.night-sign-card .paper-card-inner {
+  border-radius: 12px;
+}
+.night-sign-top {
+  margin-right: -0.34em; /* the tracking after the last letter, so it centres */
+  font-size: 12.5px;
+  letter-spacing: 0.34em;
+  color: rgb(17 17 17 / 0.72);
+}
+/* At line-height 0.82 the "p" descender (0.205em) hangs 0.135em below the
+   line box, onto the ember rule; the padding keeps it clear. */
+.night-sign-word {
+  margin-top: 4px;
+  padding-bottom: 0.1em;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: clamp(5.25rem, 26vw, 7.75rem);
+  line-height: 0.82;
+  letter-spacing: -0.03em;
+}
+.night-sign-line {
+  display: block;
+  width: 66%;
+  height: auto;
+  margin: 10px auto 0;
+  overflow: visible;
+}
+.night-sign-line path {
+  fill: none;
+  stroke: var(--color-ember);
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+.night-sign-bottom {
+  margin-top: 14px;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+@media (width >= 1024px) {
+  .night-sign-card {
+    padding: 56px 28px 34px;
+    border-radius: 24px;
+  }
+  .night-sign-card .paper-card-inner {
+    border-radius: 15px;
+  }
+  .night-sign-bottom {
+    font-size: 18px;
+  }
+}
+
+/* ── The night, hour by hour ── */
+/* A dotted rail from a moon (top) to a sun (bottom), one dot per moment. */
+.nt {
+  --rail: 32px;
+  --indent: 48px;
+  position: relative;
+  padding: 46px 0 46px var(--indent);
+}
+.nt::before {
+  content: '';
+  position: absolute;
+  left: calc(var(--rail) / 2 - 1.5px);
+  top: var(--rail);
+  bottom: var(--rail);
+  width: 3px;
+  background: radial-gradient(circle, rgb(236 231 223 / 0.36) 1.1px, transparent 1.5px) 50% 0 / 3px 8px repeat-y;
+}
+.nt-cap {
+  position: absolute;
+  left: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: var(--rail);
+  height: var(--rail);
+  border-radius: 50%;
+}
+.nt-cap svg {
+  width: 16px;
+  height: 16px;
+}
+.nt-moon {
+  top: 0;
+  background: var(--color-ink-3);
+  color: var(--color-cream);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.12);
+}
+.nt-sun {
+  bottom: 0;
+  background: var(--color-sun);
+  color: var(--color-ink);
+  box-shadow: 0 0 0 5px rgb(245 183 31 / 0.14);
+}
+.nt-list {
+  display: grid;
+  gap: 22px;
+}
+.nt-item {
+  position: relative;
+}
+.nt-dot {
+  position: absolute;
+  left: calc(var(--rail) / 2 - var(--indent) - 5.5px);
+  top: 3.5px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+}
+.is-site .nt-dot {
+  background: var(--color-ember);
+  box-shadow: 0 0 0 4px rgb(240 68 30 / 0.18);
+}
+.is-you .nt-dot {
+  background: var(--color-ink);
+  box-shadow: inset 0 0 0 2px var(--color-fog);
+}
+.nt-time {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 18px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.is-site .nt-time {
+  color: var(--color-ember);
+}
+.is-you .nt-time {
+  color: var(--color-fog);
+}
+.nt-title {
+  margin-top: 3px;
+  font-size: 16.5px;
+  font-weight: 650;
+  line-height: 1.3;
+  color: var(--color-cream);
+}
+.nt-body {
+  margin-top: 2px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--color-fog);
+}
+/* From tablet up the time sits in its own column, level with the title. */
+@media (width >= 640px) {
+  .nt {
+    --indent: 56px;
+  }
+  .nt-item {
+    display: grid;
+    grid-template-columns: 5.75rem minmax(0, 1fr);
+    column-gap: 14px;
+    align-items: baseline;
+  }
+  .nt-time {
+    font-size: 12.5px;
+  }
+  .nt-title {
+    margin-top: 0;
+    font-size: 18px;
+  }
+  .nt-body {
+    grid-column: 2;
+    font-size: 16px;
+  }
+  .nt-dot {
+    top: 6.2px;
+  }
+}
+
+/* ── The week board ── */
+.nb-title .h-icon {
+  background: var(--color-sun);
+  box-shadow:
+    inset 0 0.03em 0 rgb(255 255 255 / 0.4),
+    0 0.12em 0.22em -0.08em rgb(245 183 31 / 0.6);
+}
+
+/* Horizontal sizes are in cqw of .nb and vertical ones in em of the board's
+   font size, so the agent's path (translate in cqw / em) lands on the same
+   chips at every width. Column centres: 11.8, 30.9, 50, 69.1, 88.2cqw.
+   Row centres: 6, 10.4, 14.8em. */
+.nb {
+  container-type: inline-size;
+}
+.nb-board {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-rows: 1.8em repeat(3, 3.6em);
+  column-gap: 1.5cqw;
+  row-gap: 0.8em;
+  padding: 1.6em 3cqw;
+  border-radius: 18px;
+  background: linear-gradient(180deg, var(--color-ink-3), var(--color-ink-2) 62%);
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 0.08),
+    inset 0 1px 0 rgb(255 255 255 / 0.06),
+    0 50px 90px -50px rgb(240 68 30 / 0.32),
+    0 30px 60px -30px rgb(0 0 0 / 0.8);
+  font-size: 10.5px;
+  line-height: 1.2;
+}
+@media (width >= 400px) {
+  .nb-board {
+    font-size: 11px;
+  }
+}
+@media (width >= 640px) {
+  .nb-board {
+    font-size: 13px;
+    border-radius: 22px;
+  }
+}
+@media (width >= 1024px) {
+  .nb-board {
+    font-size: 15px;
+    border-radius: 28px;
+  }
+}
+.nb-day {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 0.95em;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-fog);
+}
+.nb-cell {
+  position: relative;
+  border: 1.5px dashed rgb(236 231 223 / 0.24);
+  border-radius: 0.75em;
+}
+.nb-chip {
+  position: absolute;
+  inset: -1.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  border-radius: inherit;
+  background: var(--color-ember);
+  color: var(--color-ink);
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.3),
+    0 10px 18px -12px rgb(240 68 30 / 0.9);
+}
+/* A small tick before "Booked" where the chips are wide enough. */
+@media (width >= 640px) {
+  .nb-chip::before {
+    content: '';
+    width: 0.34em;
+    height: 0.62em;
+    margin-top: -0.15em;
+    border: solid currentColor;
+    border-width: 0 0.15em 0.15em 0;
+    transform: rotate(45deg);
+  }
+}
+
+/* The Booking agent (ink) on a dark board: a light ring keeps its tag and
+   click visible. Its tag slides from side to side (see nb-label), so it is a
+   plain pill here. */
+.nb .agent-cursor.flip .agent-cursor-label {
+  border-radius: 999px;
+  box-shadow:
+    0 0 0 1px rgb(236 231 223 / 0.32),
+    0 8px 16px -6px rgb(0 0 0 / 0.6);
+}
+.nb .agent-click {
+  border-color: var(--color-cream);
+}
+/* Resting spot: on the last chip it booked (Fri, bottom row), tag on the left. */
+.nb-cur {
+  transform: translate(86.7cqw, 14.5em);
+}
+
+/* ── The cycle ──
+   0–4%: last week's chips clear. 10–68%: the agent books 12 chips, one every
+   5.3% (0.53s), clicking each as it pops in. Then the full board holds. The
+   chip order (nb-k0…k11) is set in Night.tsx from night.board.grid; the stops
+   below follow that grid (Mon r1–r2, Tue r3 then r1, Wed r1–r3, Thu r3 then
+   r2, Fri r1–r3). */
+@media (prefers-reduced-motion: no-preference) {
+  html:not(.lite) .nb.playing :is(.nb-chip, .nb-cur, .nb-cur .agent-cursor-label, .nb-cur .agent-click) {
+    animation-duration: 10s;
+    animation-iteration-count: infinite;
+    animation-timing-function: var(--ease-soft);
+  }
+  html:not(.lite) .nb.playing .nb-cur {
+    animation-name: nb-cur;
+  }
+  html:not(.lite) .nb.playing .nb-cur .agent-cursor-label {
+    animation-name: nb-label;
+  }
+  html:not(.lite) .nb.playing .nb-cur .agent-click {
+    animation-name: nb-click;
+    animation-timing-function: ease-out;
+  }
+  html:not(.lite) .nb.playing .nb-k0 {
+    animation-name: nb-k0;
+  }
+  html:not(.lite) .nb.playing .nb-k1 {
+    animation-name: nb-k1;
+  }
+  html:not(.lite) .nb.playing .nb-k2 {
+    animation-name: nb-k2;
+  }
+  html:not(.lite) .nb.playing .nb-k3 {
+    animation-name: nb-k3;
+  }
+  html:not(.lite) .nb.playing .nb-k4 {
+    animation-name: nb-k4;
+  }
+  html:not(.lite) .nb.playing .nb-k5 {
+    animation-name: nb-k5;
+  }
+  html:not(.lite) .nb.playing .nb-k6 {
+    animation-name: nb-k6;
+  }
+  html:not(.lite) .nb.playing .nb-k7 {
+    animation-name: nb-k7;
+  }
+  html:not(.lite) .nb.playing .nb-k8 {
+    animation-name: nb-k8;
+  }
+  html:not(.lite) .nb.playing .nb-k9 {
+    animation-name: nb-k9;
+  }
+  html:not(.lite) .nb.playing .nb-k10 {
+    animation-name: nb-k10;
+  }
+  html:not(.lite) .nb.playing .nb-k11 {
+    animation-name: nb-k11;
+  }
+}
+
+/* The agent holds on each chip from 1% before its click to 0.8% after. */
+@keyframes nb-cur {
+  0%,
+  3%,
+  67.3%,
+  100% {
+    transform: translate(86.7cqw, 14.5em);
+  }
+  9%,
+  10.8% {
+    transform: translate(10.3cqw, 5.7em);
+  }
+  14.3%,
+  16.1% {
+    transform: translate(10.3cqw, 10.1em);
+  }
+  19.6%,
+  21.4% {
+    transform: translate(29.4cqw, 14.5em);
+  }
+  24.9%,
+  26.7% {
+    transform: translate(29.4cqw, 5.7em);
+  }
+  30.2%,
+  32% {
+    transform: translate(48.5cqw, 5.7em);
+  }
+  35.5%,
+  37.3% {
+    transform: translate(48.5cqw, 10.1em);
+  }
+  40.8%,
+  42.6% {
+    transform: translate(48.5cqw, 14.5em);
+  }
+  46.1%,
+  47.9% {
+    transform: translate(67.6cqw, 14.5em);
+  }
+  51.4%,
+  53.2% {
+    transform: translate(67.6cqw, 10.1em);
+  }
+  56.7%,
+  58.5% {
+    transform: translate(86.7cqw, 5.7em);
+  }
+  62%,
+  63.8% {
+    transform: translate(86.7cqw, 10.1em);
+  }
+}
+
+/* Name tag on the right of the pointer over Mon–Wed, back on the left for
+   Thu–Fri, so it never runs off the board on a phone. */
+@keyframes nb-label {
+  0%,
+  3%,
+  45%,
+  100% {
+    transform: none;
+  }
+  7%,
+  42.6% {
+    transform: translateX(calc(100% + 3px));
+  }
+}
+
+@keyframes nb-click {
+  0%,
+  9.9%,
+  15.2%,
+  20.5%,
+  25.8%,
+  31.1%,
+  36.4%,
+  41.7%,
+  47%,
+  52.3%,
+  57.6%,
+  62.9%,
+  68.2% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  10%,
+  15.3%,
+  20.6%,
+  25.9%,
+  31.2%,
+  36.5%,
+  41.8%,
+  47.1%,
+  52.4%,
+  57.7%,
+  63%,
+  68.3% {
+    opacity: 0.9;
+    transform: scale(0.3);
+  }
+  13%,
+  18.3%,
+  23.6%,
+  28.9%,
+  34.2%,
+  39.5%,
+  44.8%,
+  50.1%,
+  55.4%,
+  60.7%,
+  66%,
+  71.3%,
+  100% {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}
+
+/* Each chip: shown (as at rest), cleared at the start of the cycle, then pops
+   in when the agent clicks it and stays for the rest of the cycle. */
+@keyframes nb-k0 {
+  0%, 1% { opacity: 1; transform: none; }
+  4%, 10% { opacity: 0; transform: scale(0.55); }
+  11.2% { opacity: 1; transform: scale(1.1); }
+  12.6%, 100% { opacity: 1; transform: none; }
+}
+@keyframes nb-k1 {
+  0%, 1% { opacity: 1; transform: none; }
+  4%, 15.3% { opacity: 0; transform: scale(0.55); }
+  16.5% { opacity: 1; transform: scale(1.1); }
+  17.9%, 100% { opacity: 1; transform: none; }
+}
+@keyframes nb-k2 {
+  0%, 1% { opacity: 1; transform: none; }
+  4%, 20.6% { opacity: 0; transform: scale(0.55); }
+  21.8% { opacity: 1; transform: scale(1.1); }
+  23.2%, 100% { opacity: 1; transform: none; }
+}
+@keyframes nb-k3 {
+  0%, 1% { opacity: 1; transform: none; }
+  4%, 25.9% { opacity: 0; transform: scale(0.55); }
+  27.1% { opacity: 1; transform: scale(1.1); }
+  28.5%, 100% { opacity: 1; transform: none; }
+}
+@keyframes nb-k4 {
+  0%, 1% { opacity: 1; transform: none; }
+  4%, 31.2% { opacity: 0; transform: scale(0.55); }
+  32.4% { opacity: 1; transform: scale(1.1); }
+  33.8%, 100% { opacity: 1; transform: none; }
+}
+@keyframes nb-k5 {
+  0%, 1% { opacity: 1; transform: none; }
+  4%, 36.5% { opacity: 0; transform: scale(0.55); }
+  37.7% { opacity: 1; transform: scale(1.1); }
+  39.1%, 100% { opacity: 1; transform: none; }
+}
+@keyframes nb-k6 {
+  0%, 1% { opacity: 1; transform: none; }
+  4%, 41.8% { opacity: 0; transform: scale(0.55); }
+  43% { opacity: 1; transform: scale(1.1); }
+  44.4%, 100% { opacity: 1; transform: none; }
+}
+@keyframes nb-k7 {
+  0%, 1% { opacity: 1; transform: none; }
+  4%, 47.1% { opacity: 0; transform: scale(0.55); }
+  48.3% { opacity: 1; transform: scale(1.1); }
+  49.7%, 100% { opacity: 1; transform: none; }
+}
+@keyframes nb-k8 {
+  0%, 1% { opacity: 1; transform: none; }
+  4%, 52.4% { opacity: 0; transform: scale(0.55); }
+  53.6% { opacity: 1; transform: scale(1.1); }
+  55%, 100% { opacity: 1; transform: none; }
+}
+@keyframes nb-k9 {
+  0%, 1% { opacity: 1; transform: none; }
+  4%, 57.7% { opacity: 0; transform: scale(0.55); }
+  58.9% { opacity: 1; transform: scale(1.1); }
+  60.3%, 100% { opacity: 1; transform: none; }
+}
+@keyframes nb-k10 {
+  0%, 1% { opacity: 1; transform: none; }
+  4%, 63% { opacity: 0; transform: scale(0.55); }
+  64.2% { opacity: 1; transform: scale(1.1); }
+  65.6%, 100% { opacity: 1; transform: none; }
+}
+@keyframes nb-k11 {
+  0%, 1% { opacity: 1; transform: none; }
+  4%, 68.3% { opacity: 0; transform: scale(0.55); }
+  69.5% { opacity: 1; transform: scale(1.1); }
+  70.9%, 100% { opacity: 1; transform: none; }
+}

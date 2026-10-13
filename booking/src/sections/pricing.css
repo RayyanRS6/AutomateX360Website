@@ -1,0 +1,357 @@
+/* Pricing: the ticket from the ad.
+   An ink ticket, tilted, with what's included on the left and the price on a
+   stub on the right (stacked on phones), split by a perforation with two
+   real notches (masks, so they work over any background).
+
+   The Booking agent's path: .tk-path is an empty box whose top-left corner
+   (or top-right, on wider screens) sits on the price and whose opposite
+   corner sits on the CTA below the ticket. Translating it by 100% of its own
+   size carries the cursor from one to the other at any width. Its resting
+   style is the end of the path (the agent on the button), which is what lite
+   devices, reduced motion and the prerendered page show. */
+
+.tk-scene {
+  /* Space between the ticket and the CTA; the agent's path uses it too. */
+  --gap: 48px;
+  position: relative;
+  max-width: 880px;
+  margin-inline: auto;
+  container-type: inline-size;
+}
+
+.tk-ticket {
+  --r: 22px; /* corner radius */
+  --n: 11px; /* notch radius */
+  --hole: #0000 var(--n), #000 calc(var(--n) + 0.5px);
+  --seam: rgb(236 231 223 / 0.34);
+  /* Phone stub geometry (fixed, so the price's height is known). */
+  --pb: 24px; /* padding under the stub */
+  --ph: 72px; /* price line */
+  --lo: 58px; /* "a month" + note */
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--r);
+  color: var(--color-cream);
+  transform: rotate(-1deg);
+  /* The ticket box itself is transparent: the shadow sits behind both parts. */
+  box-shadow:
+    0 46px 70px -38px rgb(17 17 17 / 0.6),
+    0 16px 28px -16px rgb(17 17 17 / 0.38);
+}
+
+/* ── What's included ── */
+.tk-main {
+  position: relative;
+  min-width: 0;
+  padding: 24px 22px 26px;
+  border-radius: var(--r) var(--r) 0 0;
+  background: var(--color-ink);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.07);
+  -webkit-mask:
+    radial-gradient(circle at 0 100%, var(--hole)) left / 51% 100% no-repeat,
+    radial-gradient(circle at 100% 100%, var(--hole)) right / 51% 100% no-repeat;
+  mask:
+    radial-gradient(circle at 0 100%, var(--hole)) left / 51% 100% no-repeat,
+    radial-gradient(circle at 100% 100%, var(--hole)) right / 51% 100% no-repeat;
+}
+.tk-kicker {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 16px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-fog);
+}
+.tk-kicker::before {
+  content: '';
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-sun);
+}
+.tk-items {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.005em;
+}
+.tk-items li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.tk-bullet {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  margin-top: calc(0.675em - 4px);
+  border-radius: 2px;
+  background: var(--color-ember);
+}
+
+/* ── The stub ── */
+.tk-stub {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto var(--ph) var(--lo);
+  justify-items: center;
+  margin-top: -1px; /* overlap by a pixel so no seam shows when rotated */
+  padding: 22px 20px var(--pb);
+  border-radius: 0 0 var(--r) var(--r);
+  background:
+    repeating-linear-gradient(to right, var(--seam) 0 7px, transparent 7px 13px) calc(var(--n) + 7px) 0 / calc(100% - 2 * var(--n) - 14px) 2px no-repeat,
+    var(--color-ink);
+  text-align: center;
+  -webkit-mask:
+    radial-gradient(circle at 0 0, var(--hole)) left / 51% 100% no-repeat,
+    radial-gradient(circle at 100% 0, var(--hole)) right / 51% 100% no-repeat;
+  mask:
+    radial-gradient(circle at 0 0, var(--hole)) left / 51% 100% no-repeat,
+    radial-gradient(circle at 100% 0, var(--hole)) right / 51% 100% no-repeat;
+}
+.tk-top,
+.tk-unit,
+.tk-note {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.tk-top {
+  align-self: end;
+  padding-bottom: 6px;
+  font-size: 11px;
+  line-height: 16px;
+  letter-spacing: 0.18em;
+  color: var(--color-fog);
+}
+.tk-amount {
+  display: block;
+  height: var(--ph);
+  font-family: var(--font-serif);
+  font-size: 80px;
+  line-height: var(--ph);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+.tk-lower {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  align-self: start;
+  padding-top: 8px;
+}
+.tk-unit {
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.2em;
+}
+.tk-note {
+  padding: 5px 10px 5px 11px;
+  border: 1px solid rgb(245 183 31 / 0.5);
+  border-radius: 999px;
+  font-size: 10.5px;
+  line-height: 14px;
+  letter-spacing: 0.12em;
+  color: var(--color-sun);
+}
+
+/* ── Sticky note on the corner ── */
+.tk-sticky {
+  position: absolute;
+  z-index: 4;
+  top: -36px;
+  right: 12px;
+  max-width: 5.6em;
+  padding: 0.42em 0.62em 0.52em;
+  border-radius: 3px;
+  font-family: var(--font-serif);
+  font-size: 19px;
+  font-style: italic;
+  line-height: 1.02;
+  text-align: center;
+  text-wrap: balance;
+  transform: rotate(5deg);
+}
+
+/* ── CTA under the ticket ── */
+.tk-cta {
+  margin-top: var(--gap);
+}
+
+/* ── The Booking agent's path (phone: price in the middle of the stub) ── */
+.tk-path {
+  --tx: 100%;
+  position: absolute;
+  z-index: 6;
+  left: 50%;
+  width: 78px;
+  /* Top edge: the centre of the price line, measured up from the bottom. */
+  top: calc(100% - var(--pb) - var(--lo) - var(--ph) / 2);
+  /* Bottom edge: on the button, just right of its arrow. */
+  bottom: calc(-1 * (var(--gap) + 36px));
+  pointer-events: none;
+  transform: translate(var(--tx), 100%);
+}
+
+/* ── Wider screens: side by side ── */
+@media (width >= 640px) {
+  .tk-scene {
+    --gap: 64px;
+  }
+  .tk-ticket {
+    --r: 24px;
+    --n: 13px;
+    flex-direction: row;
+    transform: rotate(-2deg);
+  }
+  .tk-main {
+    flex: 1 1 0;
+    padding: clamp(28px, 5cqw, 44px) clamp(26px, 5.5cqw, 48px);
+    border-radius: var(--r) 0 0 var(--r);
+    -webkit-mask:
+      radial-gradient(circle at 100% 0, var(--hole)) top / 100% 51% no-repeat,
+      radial-gradient(circle at 100% 100%, var(--hole)) bottom / 100% 51% no-repeat;
+    mask:
+      radial-gradient(circle at 100% 0, var(--hole)) top / 100% 51% no-repeat,
+      radial-gradient(circle at 100% 100%, var(--hole)) bottom / 100% 51% no-repeat;
+  }
+  .tk-kicker {
+    font-size: clamp(11px, 1.4cqw, 12px);
+  }
+  .tk-items {
+    gap: clamp(12px, 1.7cqw, 15px);
+    margin-top: clamp(18px, 2.8cqw, 24px);
+    font-size: clamp(16px, 2.15cqw, 18.5px);
+  }
+  /* Equal rows above and below keep the price exactly at mid-height. */
+  .tk-stub {
+    flex: 0 0 32%;
+    grid-template-rows: 1fr auto 1fr;
+    margin: 0 0 0 -1px;
+    padding: 28px 16px;
+    border-radius: 0 var(--r) var(--r) 0;
+    background:
+      repeating-linear-gradient(to bottom, var(--seam) 0 7px, transparent 7px 13px) 0 calc(var(--n) + 7px) / 2px calc(100% - 2 * var(--n) - 14px) no-repeat,
+      var(--color-ink);
+    -webkit-mask:
+      radial-gradient(circle at 0 0, var(--hole)) top / 100% 51% no-repeat,
+      radial-gradient(circle at 0 100%, var(--hole)) bottom / 100% 51% no-repeat;
+    mask:
+      radial-gradient(circle at 0 0, var(--hole)) top / 100% 51% no-repeat,
+      radial-gradient(circle at 0 100%, var(--hole)) bottom / 100% 51% no-repeat;
+    transform-origin: 0 100%;
+  }
+  .tk-amount {
+    height: auto;
+    font-size: clamp(60px, 12cqw, 108px);
+    line-height: 0.9;
+  }
+  .tk-lower {
+    padding-top: 10px;
+  }
+  .tk-sticky {
+    top: -30px;
+    right: -26px;
+    font-size: 21px;
+  }
+  /* The price is at the stub's centre (84% across, half-way down); the CTA is
+     centred under the ticket, so the path runs right-to-left. From 640px the
+     button is only as wide as its label (about 82px each side of centre, its
+     arrow ending about 57px out), and the -2deg tilt carries the end point
+     about 8px further right, so 60px lands the tip at about +68px: between
+     the arrow and the button's rounded end. */
+  .tk-path {
+    --tx: -100%;
+    left: calc(50% + 60px);
+    right: 16%;
+    width: auto;
+    top: 50%;
+    bottom: calc(-1 * (var(--gap) + 33px));
+  }
+  .tk-path .agent-cursor {
+    left: 100%;
+  }
+}
+
+/* Hovering the ticket starts to tear the stub off along the perforation. */
+@media (hover: hover) and (pointer: fine) and (width >= 640px) and (prefers-reduced-motion: no-preference) {
+  .tk-stub,
+  .tk-sticky {
+    transition: transform 0.55s var(--ease-spring);
+  }
+  .tk-ticket:hover .tk-stub {
+    transform: rotate(2.5deg) translateX(3px);
+  }
+  .tk-ticket:hover .tk-sticky {
+    transform: translate(15px, 11px) rotate(8deg);
+  }
+}
+
+/* ── The loop (10s): appear on the price, click, glide to the CTA, click,
+   rest, fade out. ── */
+@media (prefers-reduced-motion: no-preference) {
+  html:not(.lite) .tk-scene.playing .tk-path {
+    animation: tk-glide 10s var(--ease-soft) infinite;
+  }
+  html:not(.lite) .tk-scene.playing .tk-cur .agent-click {
+    animation: tk-click 10s ease-out infinite;
+  }
+}
+@keyframes tk-glide {
+  0% {
+    opacity: 0;
+    transform: translate(-10px, -8px);
+  }
+  6%,
+  18% {
+    opacity: 1;
+    transform: none;
+  }
+  44%,
+  88% {
+    opacity: 1;
+    transform: translate(var(--tx), 100%);
+  }
+  94%,
+  100% {
+    opacity: 0;
+    transform: translate(var(--tx), 100%);
+  }
+}
+@keyframes tk-click {
+  0%,
+  11.5% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  12% {
+    opacity: 0.9;
+    transform: scale(0.3);
+  }
+  17% {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+  46.5% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  47% {
+    opacity: 0.9;
+    transform: scale(0.3);
+  }
+  53%,
+  100% {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}

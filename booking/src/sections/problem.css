@@ -1,0 +1,565 @@
+/* Problem section: the same 11:42 PM question in two inboxes.
+   Both cards share one 9s cycle (.pr-scene is the .loop): on the right the
+   Reply agent types and answers inside the first ~15%; on the left nothing
+   happens until a second "Hello?" (~50%) and NO REPLY stamps in (~62%).
+   The cards are laid out in normal flow. Everything that moves is anchored
+   to what it aims at (the cursor and typing bubble to the reply bubble's
+   bottom-right corner, with fixed px rows below it), so the paths land at
+   every width and with any line wrapping.
+   Resting styles are the finished scene; keyframes only run while the scene
+   is on screen, never on lite devices or with reduced motion. Every item
+   that appears during a cycle fades out over the last 5%. */
+
+/* ── Layout ── */
+.pr-scene {
+  display: grid;
+  gap: 92px; /* room for the stamp above the second card */
+  margin-top: 56px;
+}
+@media (width >= 640px) {
+  .pr-scene {
+    gap: 100px;
+    margin-top: 72px;
+  }
+}
+@media (width >= 1024px) {
+  .pr-scene {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 28px;
+    margin-top: 112px;
+  }
+}
+
+.pr-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 30rem; /* tablets: the two cards zig-zag like a conversation */
+  padding: 18px;
+  border-radius: 22px;
+}
+.pr-with {
+  /* Stamp size; the header below reserves room for it too. */
+  --s: clamp(128px, 35vw, 148px);
+  justify-self: end;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.9),
+    0 50px 90px -40px rgb(0 0 0 / 0.85),
+    0 30px 80px -40px rgb(240 68 30 / 0.5);
+}
+@media (width >= 640px) {
+  .pr-panel {
+    padding: 22px;
+    border-radius: 26px;
+  }
+  .pr-with {
+    --s: 160px;
+  }
+}
+@media (width >= 1024px) {
+  .pr-panel {
+    max-width: none;
+    padding: 26px;
+    border-radius: 28px;
+  }
+  .pr-with {
+    --s: 170px;
+  }
+}
+
+/* ── Card header ── */
+.pr-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgb(255 255 255 / 0.08);
+}
+.pr-with .pr-head {
+  /* Keeps the label out from under the stamp: it fits on one line from
+     ~355px up and wraps to two lines below that instead of colliding. */
+  padding-right: calc(var(--s) * 0.71);
+  border-bottom-color: rgb(17 17 17 / 0.08);
+}
+.pr-tile {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border-radius: 9px;
+  background: rgb(255 255 255 / 0.07);
+  color: var(--color-fog);
+}
+.pr-tile svg {
+  width: 15px;
+  height: 15px;
+}
+.pr-tile-brand {
+  background: var(--color-ink);
+  color: var(--color-cream);
+  font-family: var(--font-serif);
+  font-size: 19px;
+  font-style: italic;
+  line-height: 1;
+}
+/* 10.5px on phones keeps "WITH AUTOMATEX360" on one line beside the stamp at 360px. */
+.pr-head .pr-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: var(--color-fog);
+}
+.pr-with .pr-head .pr-label {
+  color: var(--color-stone);
+}
+@media (width >= 640px) {
+  .pr-head .pr-label {
+    font-size: 11.5px;
+  }
+}
+
+/* ── Chat ── */
+.pr-body {
+  flex: 1 0 auto;
+  padding: 18px 0 28px;
+}
+/* Clears the Reply agent's name tag, which rests below the status pill. */
+.pr-with .pr-body {
+  padding-bottom: 44px;
+}
+.pr-chat {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-size: 15px;
+}
+@media (width >= 1024px) {
+  .pr-chat {
+    font-size: 16px;
+  }
+}
+.pr-msg {
+  display: flex;
+  flex-direction: column;
+}
+.pr-them {
+  align-items: flex-start;
+  transform-origin: 0 100%;
+}
+.pr-us {
+  align-items: flex-end;
+}
+.pr-them > .bubble,
+.pr-reply {
+  max-width: min(86%, 21rem);
+}
+/* The same cream bubble, a shade deeper so it reads on the paper card. */
+.pr-with .bubble-cream {
+  background: #e9e3d9;
+}
+.pr-time {
+  display: block;
+  height: 16px;
+  margin-top: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 16px;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  color: var(--color-fog);
+}
+.pr-with .pr-time {
+  color: var(--color-stone);
+}
+
+/* The reply and everything aimed at it. */
+.pr-reply {
+  position: relative;
+}
+.pr-a-reply {
+  transform-origin: 100% 100%;
+}
+.pr-reply .pr-typing {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  height: 36px;
+  padding: 0;
+  opacity: 0;
+  transform-origin: 100% 100%;
+}
+/* Pointer tip anchored on the reply's bottom-right corner; at rest it sits on
+   the status pill (time row 6 + 16px, then the pill 10px further down). */
+.pr-scene .pr-cur {
+  left: 100%;
+  top: 100%;
+  transform: translate(-13px, 55px);
+}
+
+.pr-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  margin-top: 10px;
+  padding: 0 12px 0 11px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow:
+    0 0 0 1px rgb(17 17 17 / 0.08),
+    0 8px 16px -10px rgb(17 17 17 / 0.35);
+  font-size: 12.5px;
+  font-weight: 650;
+  white-space: nowrap;
+  transform-origin: 100% 50%;
+}
+
+/* "NO REPLY", set under the last message like the ad. Sized to its text so
+   the stamp-in scale stays small. */
+.pr-noreply {
+  width: fit-content;
+  margin-top: 16px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 18px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--color-ember);
+  transform-origin: 0 50%;
+}
+
+/* ── Outcome line ── */
+.pr-outcome {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid rgb(255 255 255 / 0.08);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--color-fog);
+}
+.pr-with .pr-outcome {
+  border-top-color: rgb(17 17 17 / 0.08);
+  color: var(--color-ink);
+}
+.pr-outcome-ico {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 0.2);
+  color: var(--color-fog);
+}
+.pr-outcome-ico svg {
+  width: 12px;
+  height: 12px;
+}
+.pr-with .pr-outcome-ico {
+  background: var(--color-sun);
+  box-shadow: none;
+  color: var(--color-ink);
+}
+
+/* ── The stamp over the card's top-right corner ──
+   Just over half of it sits above the card. It stays inside the gutter at
+   every width (so it never overflows), and on phones it grows with the
+   viewport because the stamp's centre text is sized in vw. */
+.pr-stamp {
+  position: absolute;
+  z-index: 2;
+  top: calc(var(--s) * -0.55);
+  right: -14px;
+  width: var(--s);
+  height: var(--s);
+  transform: rotate(-4deg);
+}
+@media (width >= 640px) {
+  .pr-stamp {
+    right: -24px;
+  }
+}
+@media (width >= 1024px) {
+  .pr-stamp {
+    right: -34px;
+  }
+}
+
+/* ── The cycle ── */
+@media (prefers-reduced-motion: no-preference) {
+  html:not(.lite) .pr-scene.playing :is(.pr-a-ask, .pr-a-hello, .pr-noreply, .pr-a-out-without, .pr-typing, .pr-a-reply, .pr-a-reply-time, .pr-a-pill, .pr-a-out-with, .pr-cur, .agent-click, .pr-stamp) {
+    animation-duration: 9s;
+    animation-iteration-count: infinite;
+    animation-timing-function: var(--ease-soft);
+  }
+  /* Both sides */
+  html:not(.lite) .pr-scene.playing .pr-a-ask {
+    animation-name: pr-ask;
+  }
+  /* Without */
+  html:not(.lite) .pr-scene.playing .pr-a-hello {
+    animation-name: pr-hello;
+  }
+  html:not(.lite) .pr-scene.playing .pr-noreply {
+    animation-name: pr-noreply;
+  }
+  html:not(.lite) .pr-scene.playing .pr-a-out-without {
+    animation-name: pr-out-without;
+  }
+  /* With */
+  html:not(.lite) .pr-scene.playing .pr-cur {
+    animation-name: pr-cur;
+  }
+  html:not(.lite) .pr-scene.playing .pr-cur .agent-click {
+    animation-name: pr-click;
+    animation-timing-function: ease-out;
+  }
+  html:not(.lite) .pr-scene.playing .pr-typing {
+    animation-name: pr-typing;
+  }
+  html:not(.lite) .pr-scene.playing .pr-a-reply {
+    animation-name: pr-reply;
+  }
+  html:not(.lite) .pr-scene.playing .pr-a-reply-time {
+    animation-name: pr-reply-time;
+  }
+  html:not(.lite) .pr-scene.playing .pr-stamp {
+    animation-name: pr-stamp;
+  }
+  html:not(.lite) .pr-scene.playing .pr-a-pill {
+    animation-name: pr-pill;
+  }
+  html:not(.lite) .pr-scene.playing .pr-a-out-with {
+    animation-name: pr-out-with;
+  }
+}
+
+/* The question arrives in both inboxes at once. */
+@keyframes pr-ask {
+  0%,
+  1% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.94);
+  }
+  4%,
+  95% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: none;
+  }
+}
+
+/* Without: silence, then "Hello?", then NO REPLY, then they're gone. */
+@keyframes pr-hello {
+  0%,
+  48% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.94);
+  }
+  51%,
+  95% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: none;
+  }
+}
+@keyframes pr-noreply {
+  0%,
+  61% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+  63.5% {
+    opacity: 1;
+    transform: scale(0.94);
+  }
+  65.5%,
+  95% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: none;
+  }
+}
+@keyframes pr-out-without {
+  0%,
+  70% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  74%,
+  95% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: none;
+  }
+}
+
+/* With: the Reply agent moves in, types, the answer lands, it ticks the
+   status pill. Offsets are from the reply bubble's bottom-right corner. */
+@keyframes pr-cur {
+  0% {
+    opacity: 0;
+    transform: translate(26px, 84px);
+  }
+  2% {
+    opacity: 1;
+  }
+  5.5% {
+    transform: translate(-12px, -6px);
+  }
+  8% {
+    transform: translate(-10px, -4px);
+  }
+  10.5% {
+    transform: translate(-13px, -7px);
+  }
+  13% {
+    transform: translate(-12px, -6px);
+  }
+  18%,
+  95% {
+    opacity: 1;
+    transform: translate(-13px, 55px);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-13px, 55px);
+  }
+}
+@keyframes pr-click {
+  0%,
+  17.5% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  18% {
+    opacity: 0.9;
+    transform: scale(0.3);
+  }
+  22.5%,
+  100% {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}
+@keyframes pr-typing {
+  0%,
+  5% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  6.5%,
+  12.5% {
+    opacity: 1;
+    transform: none;
+  }
+  14%,
+  100% {
+    opacity: 0;
+    transform: none;
+  }
+}
+@keyframes pr-reply {
+  0%,
+  12.5% {
+    opacity: 0;
+    transform: scale(0.55);
+    animation-timing-function: var(--ease-spring);
+  }
+  15.5% {
+    opacity: 1;
+    transform: none;
+    animation-timing-function: var(--ease-soft);
+  }
+  95% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: none;
+  }
+}
+@keyframes pr-reply-time {
+  0%,
+  13.5% {
+    opacity: 0;
+  }
+  16%,
+  95% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+/* The stamp gives a little thump as the answer lands. */
+@keyframes pr-stamp {
+  0%,
+  14% {
+    transform: rotate(-4deg);
+  }
+  15.5% {
+    transform: rotate(-9deg) scale(1.08);
+  }
+  19%,
+  100% {
+    transform: rotate(-4deg);
+  }
+}
+@keyframes pr-pill {
+  0%,
+  18% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  21%,
+  95% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: none;
+  }
+}
+@keyframes pr-out-with {
+  0%,
+  23% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  27%,
+  95% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: none;
+  }
+}
