@@ -71,8 +71,25 @@ export const hero = {
   promises: ['Custom-made website', 'No hosting fees, for life', 'No plugin fees, for life', 'Built to scale'],
   // Cursors working on the hero homepage, like a shared design file: the
   // designer selects the headline, then you leave a comment. (The selection
-  // box in index.css, .hc-select, is measured for the Nexus headline.)
+  // box in index.css, .hc-select, is measured for mock.headline below.)
   collab: { designer: 'Designer', you: 'You', youInitial: 'Y', comment: 'Love it' },
+  // The example homepage drawn inside the hero's laptop and phone
+  // (HeroMock.tsx). A design example, not a client.
+  mock: {
+    url: 'yourbusiness.com',
+    brand: 'Your Brand',
+    initial: 'Y',
+    links: ['Services', 'Work', 'About', 'Contact'],
+    navCta: 'Book a visit',
+    eyebrow: 'Custom-made for you',
+    headline: { plain: 'Built for', em: 'you.' },
+    sub: 'A homepage designed around your brand, your services and your customers.',
+    primary: 'Get started',
+    secondary: 'See our work',
+    features: ['Custom-made', 'Built to scale', 'Yours to keep'],
+    book: { label: 'Next available', when: 'Tue · 10:30 AM', cta: 'Book' },
+    caption: { strong: 'Your homepage', rest: 'designed around your brand, before you pay' },
+  },
   // Floating chips over the hero visual. They describe the offer, not events.
   chips: {
     mockup: { title: 'Your homepage', status: 'Before you pay', badge: 'Free' },
@@ -81,7 +98,7 @@ export const hero = {
 };
 
 /**
- * Proof strip + hero visual. Screenshots are taken from the live sites by
+ * The "Recent builds" section. Screenshots are taken from the live sites by
  * `npm run capture` (scripts/capture-work.mjs) into /public/work.
  * `result` is optional: leave it out until you have a real number. Never invent one.
  */
@@ -113,9 +130,6 @@ export const work: Work[] = [
     href: 'https://nexusconstructionsite.netlify.app/',
   },
 ];
-
-/** Which build is shown large in the hero. */
-export const heroWork = 'nexus';
 
 export const proof = {
   eyebrow: 'Recent homepages',

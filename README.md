@@ -50,7 +50,9 @@ on the GHL calendar (see "Set up GoHighLevel" below), not in `src/content.ts`:
    Edge or Chrome (headless, for a minute or so) and writes optimised images
    to `public/work/`. `npm run capture -- --no-shoot` only rebuilds the image
    sizes from the last screenshots, without opening a browser.
-3. `heroWork` in `src/content.ts` picks which site is shown large in the hero.
+3. The hero's laptop and phone show an example homepage drawn in code
+   (`src/sections/HeroMock.tsx`, words in `hero.mock` in `src/content.ts`),
+   not a screenshot.
 
 ## Booking → GoHighLevel + Google Sheet + WhatsApp
 

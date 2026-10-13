@@ -554,28 +554,29 @@
 }
 
 /* ── Hero: a designer and you, working on the homepage ──
-   Placed in container units of the screenshot (100 wide × 62.5 tall), so the
-   paths land on the same spots at every size. The resting styles are the
-   finished scene (no selection, your comment showing); the 11s cycle only
-   runs while the hero is on screen, never on lite devices or with reduced
-   motion. */
+   Placed in container units of the laptop screen (100 wide × 62.5 tall, see
+   hero-mock.css), so the paths land on the same spots at every size. The
+   resting styles are the finished scene (no selection, your comment
+   showing); the 11s cycle only runs while the hero is on screen, never on
+   lite devices or with reduced motion. */
 .hc {
   container-type: inline-size;
-  /* On phones the frosted "Your homepage" chip sits lower over the frame, so
-     the comment and your cursor move up a little. */
-  --hc-dy: 0cqw;
+  /* Where the designer rests: beside the headline. On phones the name tag is
+     big next to the small screen, so it rests higher, clear of the text. */
+  --hc-rest-y: 27.5cqw;
 }
 @media (width < 640px) {
   .hc {
-    --hc-dy: -4.5cqw;
+    --hc-rest-y: 22cqw;
   }
 }
+/* Around the example headline (.dm-h1). */
 .hc-select {
   position: absolute;
-  left: 17.5cqw;
-  top: 11.2cqw;
-  width: 65cqw;
-  height: 7.2cqw;
+  left: 23.8cqw;
+  top: 15.9cqw;
+  width: 19.7cqw;
+  height: 17cqw;
   border: 1.5px solid var(--color-ember);
   opacity: 0;
   transform-origin: 0 0;
@@ -604,11 +605,11 @@
   right: -4px;
   bottom: -4px;
 }
-/* Left of the frosted "Your homepage" chip, which covers the right side. */
+/* On the top-left of the example's image, clear of the frosted chips. */
 .hc-comment {
   position: absolute;
-  left: 37cqw;
-  top: calc(41cqw + var(--hc-dy));
+  left: 64.5cqw;
+  top: 13.5cqw;
   z-index: 5;
   display: flex;
   align-items: center;
@@ -640,10 +641,10 @@
   color: var(--color-go);
 }
 .hc-cur-designer {
-  transform: translate(86cqw, 22cqw);
+  transform: translate(46cqw, var(--hc-rest-y));
 }
 .hc-cur-you {
-  transform: translate(53cqw, calc(50cqw + var(--hc-dy)));
+  transform: translate(76cqw, 23.5cqw);
 }
 @media (prefers-reduced-motion: no-preference) {
   html:not(.lite) .hc.playing :is(.hc-select, .hc-comment, .hc-cur-designer, .hc-cur-you, .agent-click) {
@@ -667,23 +668,6 @@
     animation-name: hc-click;
     animation-timing-function: ease-out;
   }
-  /* The designer's name tag sits left of the pointer (.flip), and swaps to the
-     right while the pointer is at the headline's left edge. */
-  html:not(.lite) .hc.playing .hc-cur-designer .agent-cursor-label {
-    animation: hc-designer-tag 11s var(--ease-soft) infinite;
-  }
-}
-@keyframes hc-designer-tag {
-  0%,
-  6%,
-  22%,
-  100% {
-    transform: none;
-  }
-  11%,
-  17% {
-    transform: translateX(calc(100% + 22px));
-  }
 }
 /* The designer drags a selection around the headline, nudges its corner, lets go. */
 @keyframes hc-designer {
@@ -691,18 +675,18 @@
   4%,
   52%,
   100% {
-    transform: translate(86cqw, 22cqw);
+    transform: translate(46cqw, var(--hc-rest-y));
   }
   14% {
-    transform: translate(17.5cqw, 11.2cqw);
+    transform: translate(23.8cqw, 15.9cqw);
   }
   26%,
   30% {
-    transform: translate(82.5cqw, 18.4cqw);
+    transform: translate(43.5cqw, 32.9cqw);
   }
   36%,
   44% {
-    transform: translate(85cqw, 19.4cqw);
+    transform: translate(45.2cqw, 33.9cqw);
   }
 }
 @keyframes hc-select {
@@ -723,27 +707,27 @@
   36%,
   44% {
     opacity: 1;
-    transform: scale(1.038, 1.14);
+    transform: scale(1.086, 1.059);
   }
   50%,
   100% {
     opacity: 0;
-    transform: scale(1.038, 1.14);
+    transform: scale(1.086, 1.059);
   }
 }
 /* Then you drop by and leave a comment. */
 @keyframes hc-you {
   0%,
   52% {
-    transform: translate(53cqw, calc(50cqw + var(--hc-dy)));
+    transform: translate(76cqw, 23.5cqw);
   }
   60%,
   63% {
-    transform: translate(38.5cqw, calc(44cqw + var(--hc-dy)));
+    transform: translate(67.1cqw, 16cqw);
   }
   70%,
   100% {
-    transform: translate(53cqw, calc(50cqw + var(--hc-dy)));
+    transform: translate(76cqw, 23.5cqw);
   }
 }
 @keyframes hc-click {

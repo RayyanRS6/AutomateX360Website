@@ -1,13 +1,9 @@
 import { useEffect, useRef } from 'react';
 import { CalendarCheck2, Check } from 'lucide-react';
-import { cta, hero, heroWork, work } from '../content';
+import { cta, hero } from '../content';
 import { initPointerDepth } from '../lib/motion';
-import { AgentCursor, BrowserFrame, CtaLink, PhoneFrame, PriceTag, vars, workSrc, workSrcSet } from '../components/ui';
-
-// Shared with the <head> preload (entry-server.tsx); they must match exactly
-// or the browser downloads the hero image twice.
-export const HERO_FOLD_WIDTHS = [600, 800, 1200, 1600];
-export const HERO_FOLD_SIZES = '(min-width: 1280px) 600px, (min-width: 1024px) 48vw, 60vw';
+import { AgentCursor, BrowserFrame, CtaLink, PhoneFrame, PriceTag, vars } from '../components/ui';
+import { DesktopMock, PhoneMock } from './HeroMock';
 
 export function Hero() {
   return (
@@ -57,16 +53,15 @@ export function Hero() {
 }
 
 /**
- * The hero's best build: a browser, a phone and two frosted chips layered at
- * different depths. Each layer has two wrappers: the outer one takes scroll
+ * An example homepage (drawn in code, see HeroMock.tsx) on a laptop and a
+ * phone, with two frosted chips, layered at different depths. Each layer has
+ * two wrappers: the outer one takes scroll
  * parallax (data-speed), the inner one pointer depth (data-depth), so the two
  * motions never fight over the same property.
  */
 function HeroStage() {
   const stage = useRef<HTMLDivElement>(null);
   useEffect(() => (stage.current ? initPointerDepth(stage.current) : undefined), []);
-
-  const w = work.find((x) => x.slug === heroWork) ?? work[0];
 
   return (
     <div ref={stage} className="relative mx-auto w-full max-w-[640px] lg:max-w-none">
@@ -75,20 +70,10 @@ function HeroStage() {
         <div data-speed="0.03" className="absolute right-0 top-0 w-[90%] sm:w-[86%] lg:w-[95%]">
           <div data-depth="0.7" className="enter-rise" style={vars({ '--d': '100ms' })}>
             <div className="hero-tilt">
-              <BrowserFrame url={w.domain ?? w.name}>
-                {/* A designer and you at work on the homepage (decorative; see .hc in index.css). */}
+              <BrowserFrame url={hero.mock.url}>
+                {/* An example homepage, and a designer and you at work on it (see .hc in index.css). */}
                 <div className="hc loop relative">
-                  <img
-                    src={workSrc(w.slug, 'fold', 1200)}
-                    srcSet={workSrcSet(w.slug, 'fold', HERO_FOLD_WIDTHS)}
-                    sizes={HERO_FOLD_SIZES}
-                    width={1600}
-                    height={1000}
-                    alt={`${w.name} homepage on desktop`}
-                    fetchPriority="high"
-                    decoding="async"
-                    className="block aspect-[16/10] w-full bg-sand object-cover object-top"
-                  />
+                  <DesktopMock />
                   <span aria-hidden className="hc-select">
                     <i />
                     <i />
@@ -100,8 +85,8 @@ function HeroStage() {
                     {hero.collab.comment}
                     <Check strokeWidth={3} />
                   </span>
-                  <AgentCursor name={hero.collab.designer} tone="ink" className="hc-cur-designer" flip />
-                  <AgentCursor name={hero.collab.you} className="hc-cur-you" click flip />
+                  <AgentCursor name={hero.collab.designer} tone="ink" className="hc-cur-designer" />
+                  <AgentCursor name={hero.collab.you} className="hc-cur-you" click />
                 </div>
               </BrowserFrame>
             </div>
@@ -112,16 +97,7 @@ function HeroStage() {
         <div data-speed="0.05" className="absolute bottom-0 left-0 w-[31%] sm:left-[3%] sm:w-[25%] lg:left-[-2%] lg:w-[27%]">
           <div data-depth="2" className="enter-rise" style={vars({ '--d': '260ms' })}>
             <PhoneFrame>
-              <img
-                src={workSrc(w.slug, 'mfold', 400)}
-                srcSet={workSrcSet(w.slug, 'mfold', [300, 400, 600])}
-                sizes="(min-width: 1024px) 170px, 22vw"
-                width={600}
-                height={1298}
-                alt={`${w.name} homepage on a phone`}
-                decoding="async"
-                className="block aspect-[390/844] w-full bg-sand object-cover object-top"
-              />
+              <PhoneMock />
             </PhoneFrame>
           </div>
         </div>
@@ -161,8 +137,8 @@ function HeroStage() {
       </div>
 
       <p className="mt-8 text-center text-[12.5px] text-ink/70 sm:mt-10 lg:mt-12 lg:pl-[30%] lg:text-left">
-        <span className="font-semibold text-ink">{w.name}</span>
-        {` · ${w.industry}`}
+        <span className="font-semibold text-ink">{hero.mock.caption.strong}</span>
+        {` · ${hero.mock.caption.rest}`}
       </p>
     </div>
   );
