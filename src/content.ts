@@ -25,11 +25,23 @@ export const config = {
   minBudget: '$2,000',
   callMinutes: 20,
   /**
-   * Hours offered in the booking calendar demo, in the visitor's local time.
-   * TODO: replace with your real availability (and time zone) when the
-   * calendar is connected to your scheduler.
+   * Your working hours, in YOUR time zone. Visitors see them converted to
+   * theirs: 14:00 to 03:00 Pakistan time is about 4 AM to 5 PM in New York
+   * (winter), 1 PM to 2 AM in Dubai. A shift that ends after midnight belongs
+   * to the day it starts; `days` are the weekdays a shift starts on
+   * (0 = Sunday … 6 = Saturday).
    */
-  bookingHours: { start: 9, end: 17, slotMinutes: 30 },
+  availability: {
+    timeZone: 'Asia/Karachi', // Islamabad, Pakistan (PKT, UTC+5, no daylight saving)
+    days: [0, 1, 2, 3, 4, 5, 6], // every day, weekends included
+    start: '14:00',
+    end: '03:00',
+    slotMinutes: 30,
+  },
+  /** Visitors' time zone when their device doesn't report one (Eastern Time). */
+  defaultVisitorTimeZone: 'America/New_York',
+  /** The earliest a call can be booked, in hours from now. */
+  minNoticeHours: 4,
   /** How many days ahead the calendar shows. */
   bookingDaysAhead: 30,
 };
@@ -100,8 +112,10 @@ export const heroWork = 'nexus';
 export const proof = {
   eyebrow: 'Recent homepages',
   heading: 'Recent builds. Judge for yourself.',
-  hintDesktop: 'Hover a site to scroll the full page.',
-  hintMobile: 'Swipe to see more.',
+  hintDesktop: 'Hover to scroll the page. Click to visit the live site.',
+  hintMobile: 'Swipe to see more. Tap to visit.',
+  visit: 'View live site',
+  newTab: 'opens in a new tab',
 };
 
 export const offer = {
@@ -221,12 +235,14 @@ export const booking = {
   qualifyHeading: 'Two quick questions first.',
   qualifyNote: 'Takes about 10 seconds.',
   budgetQuestion: 'What’s your website budget?',
-  // "under" is the option that leads to the not-a-fit message.
+  // Everyone can book. Picking "under" asks for the amount, which is passed on with the lead.
   budgets: [
     { id: 'under', label: `Under ${config.minBudget}` },
     { id: 'mid', label: `${config.minBudget} to $5,000` },
     { id: 'high', label: '$5,000+' },
   ] as const,
+  budgetAmountQuestion: 'How much is your budget?',
+  budgetAmountPlaceholder: 'e.g. 1,000',
   siteQuestion: 'What’s your current website?',
   sitePlaceholder: 'yourbusiness.com',
   noSite: 'I don’t have one yet',
@@ -240,18 +256,22 @@ export const booking = {
     emailMissing: 'Please add your email.',
     emailInvalid: 'Check the email address.',
     business: 'Please add your business name.',
+    budgetAmount: 'Tell us roughly how much you have in mind.',
     submit: 'That didn’t go through. Please try again, or pick another time.',
     slotGone: 'That time has passed. Please pick another.',
+    slotTaken: 'Sorry, that time was just booked. Please pick another.',
   },
-  notFit: {
-    heading: 'Not the right fit. Yet.',
-    body: `Thanks for being straight with us. Every site we build is custom, so projects start at ${config.minBudget}. We’d rather say so now than cut corners later.`,
-    later: 'If your budget changes, we’d love to talk. Nothing you entered has been sent.',
-    back: 'I picked the wrong range',
-  },
+  slotsLoading: 'Checking available times…',
+  slotsError: 'Couldn’t load the available times.',
+  retry: 'Try again',
   timeHeading: 'Pick a day and time',
   timesIn: 'Times in',
+  timeZoneLabel: 'Your time zone',
+  timeZoneHint: 'Set from your device. Change it if it’s not right.',
   chooseDay: 'Choose a day',
+  noSlots: 'No times left on this day. Pick another day.',
+  // Slot groups, by the hour in the visitor's own time zone.
+  dayParts: { early: 'Early hours', morning: 'Morning', afternoon: 'Afternoon', evening: 'Evening' },
   // Screen-reader labels.
   a11y: {
     times: 'Available times',
@@ -268,6 +288,7 @@ export const booking = {
     name: 'Full name',
     email: 'Email',
     phone: 'Phone',
+    phoneCountry: 'Country code',
     // TODO: confirm, and confirm how the call happens (phone or video). If you
     // phone people, make this field required and say "We'll call you on this number."
     phoneHint: 'Only used to reach you about your call.',
@@ -282,9 +303,9 @@ export const booking = {
   privacy: 'We only use these details to arrange your call.',
   done: {
     heading: 'You’re booked',
-    // Each booking reaches you on WhatsApp (api/book.ts); nothing emails the
-    // visitor automatically, so this promises a personal confirmation.
-    // TODO: keep true: confirm each call by email.
+    // Each booking is added to your GHL calendar and reaches you on WhatsApp
+    // (api/book.ts). GHL sends confirmations only if your calendar's
+    // notifications are switched on. TODO: keep true: confirm each call by email.
     body: 'We’ll confirm your call by email at',
     next: [
       'On the call, we agree what the site must do and give you a fixed quote.',

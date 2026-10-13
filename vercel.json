@@ -4,7 +4,8 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "functions": {
-    "api/book.ts": { "maxDuration": 30 }
+    "api/book.ts": { "maxDuration": 60 },
+    "api/slots.ts": { "maxDuration": 15 }
   },
   "headers": [
     {

@@ -1,18 +1,21 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { booking } from '../../content';
-import { bookingWindow, fmt, isBookable, monthGrid, sameDay, weekdayLabels } from '../../lib/booking';
+import { bookingWindow, dateIn, fmt, isBookable, monthGrid, sameDay, weekdayLabels } from '../../lib/booking';
 
 type Props = {
   now: Date;
+  /** The visitor's time zone: days, "today" and availability are read in it. */
+  timeZone: string;
   month: Date;
   onMonth: (m: Date) => void;
   selected: Date | null;
   onSelect: (d: Date) => void;
 };
 
-/** Month view. Only days inside the booking window with open slots are clickable. */
-export function Calendar({ now, month, onMonth, selected, onSelect }: Props) {
-  const { first, last } = bookingWindow(now);
+/** Month view. Only days with open times (in the visitor's zone) are clickable. */
+export function Calendar({ now, timeZone, month, onMonth, selected, onSelect }: Props) {
+  const { first, last } = bookingWindow(now, timeZone);
+  const today = dateIn(now, timeZone);
   const cells = monthGrid(month);
   const canPrev = month > new Date(first.getFullYear(), first.getMonth(), 1);
   const canNext = new Date(month.getFullYear(), month.getMonth() + 1, 1) <= last;
@@ -50,11 +53,15 @@ export function Calendar({ now, month, onMonth, selected, onSelect }: Props) {
       <div className="mt-1 grid grid-cols-7 gap-1">
         {cells.map((d, i) => {
           if (!d) return <span key={`pad-${i}`} aria-hidden />;
-          const open = isBookable(d, now);
-          if (!open) {
+          const isToday = sameDay(d, today);
+          if (!isBookable(d, now, timeZone)) {
             // Unavailable days are shown, but are not buttons or tab stops.
             return (
-              <span key={d.getTime()} aria-hidden className={`grid aspect-square place-items-center text-[14.5px] font-medium text-ink/30 ${sameDay(d, now) ? 'underline decoration-ember decoration-2 underline-offset-4' : ''}`}>
+              <span
+                key={d.getTime()}
+                aria-hidden
+                className={`grid aspect-square place-items-center text-[14.5px] font-medium text-ink/30 ${isToday ? 'underline decoration-ember decoration-2 underline-offset-4' : ''}`}
+              >
                 {d.getDate()}
               </span>
             );
@@ -69,7 +76,7 @@ export function Calendar({ now, month, onMonth, selected, onSelect }: Props) {
               onClick={() => onSelect(d)}
               className={`relative grid aspect-square place-items-center rounded-xl text-[14.5px] font-medium transition ${
                 active ? 'bg-ink text-cream shadow-[0_8px_18px_-8px_rgb(17_17_17/0.7)]' : 'bg-white text-ink ring-1 ring-ink/20 hover:ring-ink/50'
-              }`}
+              } ${isToday && !active ? 'underline decoration-ember decoration-2 underline-offset-4' : ''}`}
             >
               {d.getDate()}
               {!active && <span aria-hidden className="absolute bottom-[5px] size-1 rounded-full bg-ember" />}

@@ -49,22 +49,40 @@ Items marked `TODO` need your real answer before ads go live:
    sizes from the last screenshots, without opening a browser.
 3. `heroWork` in `src/content.ts` picks which site is shown large in the hero.
 
-## Booking → Google Sheet → WhatsApp
+## Booking → GoHighLevel + Google Sheet + WhatsApp
 
-When someone confirms a call, the page posts the booking to `api/book.ts`, a
-Vercel serverless function. The function checks the booking and forwards it,
-with a shared password, to a Google Sheet script
-(`google-apps-script/Code.gs`). The script saves the booking as a row in the
-sheet and sends it to your WhatsApp through the WhatsApp agent.
+When a visitor reaches the time step, the page asks `api/slots.ts` for your
+free times in your **GoHighLevel calendar**, so anything you're already booked
+for never shows. When they confirm, `api/book.ts`:
 
-Nothing secret is in the browser or this repo: the script's URL and the
-shared password live in Vercel's environment variables, and the WhatsApp
-agent's API key lives in the script's Script Properties.
+1. **GoHighLevel:** creates or updates the contact, books the appointment on
+   your calendar (if someone took the time a moment earlier, the visitor is
+   asked to pick another), then adds the tag **`studio-website`** and a note
+   with the call time, budget, website, phone and notes.
+2. **Google Sheet → WhatsApp:** forwards the booking, with a shared password,
+   to the sheet script (`google-apps-script/Code.gs`), which saves a row and
+   sends you a WhatsApp alert.
 
-Anyone who picks "Under $2,000" sees a polite "not a fit" message and never
-reaches the calendar (the function also rejects under-budget bookings). A
-hidden spam-trap field quietly drops bot submissions.
+Everyone can book, whatever their budget. Picking "Under $2,000" asks how much
+their budget is, and that amount goes with the lead. A hidden spam-trap field
+quietly drops bot submissions.
 
+Nothing secret is in the browser or this repo: the GHL token, the sheet's URL
+and its password live in Vercel's environment variables, and the WhatsApp
+agent's API key lives in the sheet script's Script Properties.
+
+### 0. Set up GoHighLevel (once)
+
+1. **Calendar:** in GHL, open the calendar visitors should book into. Set its
+   time zone to **Asia/Karachi**, its availability to your hours (**every day,
+   2 PM to 3 AM**), the slot length and interval (e.g. 30 minutes) and a
+   minimum notice. These settings decide which times visitors see.
+2. **Private Integration token:** Settings → Private Integrations. Use a token
+   with the scopes `calendars.readonly`, `calendars/events.write` and
+   `contacts.write`.
+3. Note your **Location ID** (Settings → Business Profile, or the part after
+   `/location/` in the GHL address bar) and the **Calendar ID** (in the
+   calendar's settings or its booking link).
 ### 1. Set up the Google Sheet (once)
 
 1. Create a Google Sheet. From inside it, open **Extensions → Apps Script**
@@ -100,9 +118,12 @@ Project → Settings → Environment Variables (see `.env.example`):
 
 | Variable | Value |
 | --- | --- |
+| `GHL_TOKEN` | Your GHL Private Integration token (`pit-…`) |
+| `GHL_LOCATION_ID` | Your GHL Location ID |
+| `GHL_CALENDAR_ID` | The GHL calendar to book into |
 | `SHEET_WEBHOOK_URL` | The Web app URL from step 6 |
 | `SHEET_SECRET` | The same password as `SHARED_SECRET` |
-| `OWNER_TIMEZONE` | Your time zone, e.g. `Asia/Karachi`, so the call time is shown in yours |
+| `OWNER_TIMEZONE` | Optional. Defaults to `Asia/Karachi` (Islamabad), the zone your call times are shown in |
 
 Then redeploy (environment variables apply to new deployments) and make a
 test booking.
@@ -118,14 +139,21 @@ and the script's error shows under Executions in Apps Script.
 To test the real send, install the Vercel CLI and run `vercel dev` with the
 variables in a `.env.local` file (git-ignored).
 
-### Availability
+### Availability and time zones
 
-Calendar times are generated in the browser: weekdays, 9:00 to 17:00 in the
-**visitor's** time zone, so someone abroad can pick a time that is outside
-your hours. Every alert shows the time in your zone (`OWNER_TIMEZONE`) and in
-theirs. To show only your real availability, connect a scheduler (Cal.com,
-Calendly, Google Calendar) in `getSlots` in `src/lib/booking.ts`.
-
+- With GHL connected, visitors see exactly the free times of your GHL
+  calendar. Without it (or in `npm run dev`), the page falls back to the hours
+  in `config.availability` in `src/content.ts`: every day, 2 PM to 3 AM
+  Pakistan time.
+- The visitor's time zone is read from their device's clock settings, so the
+  browser never asks for permission. If it can't be read, it's Eastern Time.
+  The booking card has a time-zone picker so they can change it.
+- The phone field has a country-code picker, preset from the visitor's time
+  zone or browser language. Numbers are sent in international format (+971…).
+- Every booking is saved and sent to you with the call time in **your** time
+  (Pakistan) and in **theirs**.
+- The page also applies `minNoticeHours` (4) and `bookingDaysAhead` (30) on
+  top of GHL's own settings.
 ## Performance
 
 - Motion only animates `transform` and `opacity`. Looping animations play a
