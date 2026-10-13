@@ -58,8 +58,8 @@ out in container units so the cursors land on their targets at any width.
 
 ## Booking → GoHighLevel + Google Sheet + WhatsApp
 
-Exactly like the studio site (see its README for the one-time GHL and Google
-Sheet setup):
+Exactly like the studio site (see `../studio/README.md` for the one-time GHL
+and Google Sheet setup):
 
 1. The time step loads your free times from the **same GHL calendar**
    (`api/slots.ts`), including its minimum notice.

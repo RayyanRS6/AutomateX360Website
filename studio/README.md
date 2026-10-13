@@ -24,9 +24,10 @@ npm run build      # production build in dist/
 npm run preview    # serve the build at http://localhost:4173
 ```
 
-Deploy on **Vercel**: import the GitHub repo; the settings in `vercel.json`
-are picked up automatically (Vite, `npm run build`, output `dist`, plus the
-`api/` function). Add the environment variables below before taking bookings.
+Deploy on **Vercel**: import the GitHub repo and set **Root Directory** to
+`studio` (Settings → Build and Deployment). The rest comes from
+`studio/vercel.json`: Vite, `npm run build`, output `dist`, plus the `api/`
+functions. Add the environment variables below before taking bookings.
 
 ## Change the words
 
@@ -154,8 +155,9 @@ may have been booked anyway.
 ### Test locally
 
 `npm run dev` has no server functions; the form completes without sending.
-To test the real send, install the Vercel CLI and run `vercel dev` with the
-variables in a `.env.local` file (git-ignored).
+To test the real send, install the Vercel CLI, run `vercel link` and then
+`vercel dev` from the repo root (the project's Root Directory is `studio`),
+with the variables in `studio/.env.local` (git-ignored).
 
 ### Availability and time zones
 
